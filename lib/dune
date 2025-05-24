@@ -1,2 +1,6 @@
+(include_subdirs qualified)
+
 (library
- (name Logica))
+ (name logica)
+ (wrapped false)
+ (preprocess (pps bisect_ppx)))
