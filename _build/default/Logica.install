@@ -1,8 +1,0 @@
-lib: [
-  "_build/install/default/lib/Logica/META"
-  "_build/install/default/lib/Logica/dune-package"
-  "_build/install/default/lib/Logica/opam"
-]
-bin: [
-  "_build/install/default/bin/Logica"
-]
