@@ -1,3 +1,7 @@
 (test
+ (name test_el_syntax)
+ (libraries logica alcotest))
+
+(test
  (name test_epistemic_logic)
- (libraries alcotest logica))
+ (libraries logica alcotest))

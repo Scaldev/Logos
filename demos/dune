@@ -1,6 +1,6 @@
 (include_subdirs qualified)
 
 (library
- (name logica)
+ (name demos)
  (wrapped false)
- (instrumentation (backend bisect_ppx)))
+ (libraries logica))

@@ -1,42 +1,49 @@
-type fmla =
-    True
-  | False
-  | AP of int
-  | Not of fmla
-  | And of fmla * fmla
-  | Or of fmla * fmla
-  | Imp of fmla * fmla
-  | Eq of fmla * fmla
-  | Know of int * fmla
+include module type of El_syntax
 
-type kfmla =
-    AP of int
-  | Not of kfmla
-  | And of kfmla * kfmla
-  | Know of int * kfmla
+type rel = (int * int) list
 
-(**
-  [equal_kfmla f1 f2] returns [true] iff f1 and f2 have the same AST.
-*)
-val equal_kfmla : kfmla -> kfmla -> bool
+type event = {
+  id : int;
+  mutable pre : fmla;
+  mutable post : fmla option array;
+}
 
-(**
-  [string_of_kfmla f] returns the string representation of f.
-*)
-val string_of_kfmla : kfmla -> string
+type event_model = {
+    events : event array;
+    rels : rel array;
+}
 
-(**
-  [el_form_of f] returns an equivalent formula [f'] such that
-  [f'] is in the language of epistemic logic.
-*)
-val el_form_of : fmla -> kfmla
+type action = event_model * int
 
-(**
-  [modal_depth f] returns the modal depth of [f].
-*)
-val modal_depth : kfmla -> int
+val max_ap_in_event_model : event_model -> int
 
-(**
-  [size f] returns the size of [f].
-*)
-val size : kfmla -> int
+val size_of_event_model : event_model -> int
+
+type world = {
+    aps : int list;
+    history : int list;
+}
+
+type valuation = bool array
+
+type kripke_model = {
+  domain : world array;
+  rels : rel array;
+  valuation : valuation array;
+}
+
+type state = kripke_model * int
+
+val size_km : kripke_model -> int
+
+val is_symmetric : rel -> bool
+
+val is_S5_model : kripke_model -> bool
+
+val is_non_contradictory_belief : state -> fmla -> rel -> bool
+
+val eval : state -> fmla -> bool
+
+val is_applicable : state -> action -> bool
+
+val ( @ ) : state -> action -> state
