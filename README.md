@@ -7,7 +7,7 @@ structures in a formal way by means of reinterpreting a structure into another.
 
 This project is about the relationship between the FODEL update mechanism and FOI.
 
-### 
+### Setup
 
 Use `dune build` and `dune exec main` to execute the project. Use `dun runtest` to run tests.
 
