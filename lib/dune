@@ -3,4 +3,5 @@
 (library
  (name logica)
  (wrapped false)
+ (libraries uutf)
  (instrumentation (backend bisect_ppx)))

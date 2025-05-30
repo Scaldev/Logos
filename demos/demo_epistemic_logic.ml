@@ -10,3 +10,4 @@ let ags = [| "a"; "b"; "c"; "d" |]
 let exec () =
   print_string ("f1 = " ^ pp_of_fmla aps ags f1 ^ "\n");
   print_string ("f2 = " ^ pp_of_fmla aps ags f2 ^ "\n");
+

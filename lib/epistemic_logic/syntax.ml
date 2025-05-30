@@ -79,6 +79,11 @@ let default_legend (f: fmla) : string array * string array =
   let ags = max_ag_in_fmla f |> legend ""   in
   (aps, ags)
   
+(*****************************************************************************)
+
+(**
+  [pp_of_binop op] returns the string representation of binary operator [op].
+*)
 let pp_of_binop (op: binop) : string =
   match op with
   | And -> "\u{2227}"
@@ -88,8 +93,8 @@ let pp_of_binop (op: binop) : string =
 
 let rec pp_of_fmla (aps: string array) (ags: string array) (f: fmla) : string =
   match f with
-  | True           -> "\u{22a4}"
-  | False          -> "\u{22a5}"
+  | True           -> "⊤"
+  | False          -> "⊥"
   | AP i           -> aps.(i)
   | Not g          -> "\u{00ac}" ^ pp_of_fmla aps ags g
   | Bin (g, op, h) -> "(" ^ pp_of_fmla aps ags g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla aps ags h ^ ")"

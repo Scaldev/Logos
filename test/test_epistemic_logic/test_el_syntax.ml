@@ -1,7 +1,5 @@
 open Epistemic_logic
 
-(*************************************************************************)
-
 (*
 let pp_fmla fmt f =
   Format.fprintf fmt "%s" (string_of_fmla f)
@@ -161,6 +159,7 @@ let tests_pp_of_fmla = [
   test_pp_of_fmla_2;
   test_pp_of_fmla_3;
 ]
+
 (*************************************************************************)
 
 let tests = [
@@ -177,5 +176,4 @@ let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list
     (fst ts, List.map (fun t -> Alcotest.test_case "" `Quick t) (snd ts))
   ) tss
 
-let () =
-Alcotest.run "Epistemic logic" (format_tests tests) 
+let () = Alcotest.run "Epistemic logic (syntax)" (format_tests tests) 
