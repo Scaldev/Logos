@@ -4,12 +4,12 @@ type 'a relation = ('a * 'a) list
 
 type world = {
     history : event list;
-    valuation : int list;
+    valuation : string list;
 }
 
 type kripke_model = {
     domain : world list;
-    rels : world relation array;
+    rels : (string * world relation) list;
 }
 
 type state = kripke_model * world

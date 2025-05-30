@@ -8,12 +8,12 @@ let (<<) = Fun.compose
 
 type world = {
   history: event list;            (* events leading to this world *)
-  valuation: int list             (* atomic propositions true in that world *)
+  valuation: string list          (* atomic propositions true in that world *)
 }
 
 type kripke_model = {
-  domain: world list;             (* W *)
-  rels: world relation array;     (* subset of W x W *)
+  domain: world list;                  (* W *)
+  rels: (string * world relation) list; (* subset of W x W *)
 }
 
 (**
@@ -21,7 +21,7 @@ type kripke_model = {
 *)
 let size_of_kripke_model (km: kripke_model) : int =
   List.length km.domain
-  + Array.fold_right ((+) << List.length) km.rels 0
+  + List.fold_right ((+) << List.length << snd) km.rels 0
   + List.fold_right ((+) << (fun w -> List.length w.valuation)) km.domain 0
 
 (**
@@ -32,14 +32,18 @@ let is_symmetric (r: 'a relation) : bool =
   List.iter (fun e -> Hashtbl.replace tbl e ()) r;
   List.for_all (fun (u, v) -> Hashtbl.mem tbl (v, u)) r
   
-(* In O(n) time complexity, where n is the total amount of relations defined for all agents. *)
 let is_S5_model (km: kripke_model) : bool =
-  Array.for_all is_symmetric km.rels
+  List.for_all (is_symmetric << snd) km.rels
 
 (*****************************************************************************)
 
 type state = kripke_model * world (* id of the actual world *)
 
+let relation_of_agent (rels: (string * world relation) list) (a: string) : world relation =
+  match List.find_opt (((=) a) << fst) rels with
+  | None   -> []
+  | Some r -> snd r
+  
 (**
   (s |= K_a phi) if and only if (for all w' in W, w ->_a w' implies (M, w') |= phi)
 *)
@@ -58,6 +62,6 @@ and eval (s: state) (f: fmla) : bool =
   | Bin(g, Or,  h) -> eval s g || eval s h
   | Bin(g, Imp, h) -> not (eval s g) || eval s h
   | Bin(g, Eq,  h) -> eval s g == eval s h
-  | Know(a, g)     -> is_non_contradictory_belief s g km.rels.(a)
+  | Know(a, g)     -> is_non_contradictory_belief s g (relation_of_agent km.rels a)
 
 let (|=) = eval

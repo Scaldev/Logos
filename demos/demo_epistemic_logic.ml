@@ -1,13 +1,13 @@
 open Epistemic_logic
 
-(* m_a = 0,   m_b = 1,   d = 2 *)
-let f1 = Know(0, Bin(Not(AP(0)), Or, Not(AP(1))))
-let f2 = Know(0, Know(1, Not(AP(2))))
-
-let aps = [| "p"; "q"; "r"; "s"; "t" |]
-let ags = [| "a"; "b"; "c"; "d" |]
+let f1 = Know("a", Bin(Not(AP("p")), Or, Not(AP("q"))))
+let f2 = Know("b", Know("a", Not(AP("r"))))
+let f3 = Bin (Bin (AP "p", Imp, AP "q"), And, Bin (AP "r", Eq, AP "s"))
+let f4 = Not(Bin(True, Or, False))
 
 let exec () =
-  print_string ("f1 = " ^ pp_of_fmla aps ags f1 ^ "\n");
-  print_string ("f2 = " ^ pp_of_fmla aps ags f2 ^ "\n");
+  print_string ("f1 = " ^ pp_of_fmla f1 ^ "\n");
+  print_string ("f2 = " ^ pp_of_fmla f2 ^ "\n");
+  print_string ("f3 = " ^ pp_of_fmla f3 ^ "\n");
+  print_string ("f4 = " ^ pp_of_fmla f4 ^ "\n");
 

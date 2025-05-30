@@ -1,4 +1,4 @@
-let (<<) = Fun.compose
+module StringSet = Set.Make(String)
 
 (*************************************************************************)
 (*                                Syntax                                 *)
@@ -9,10 +9,10 @@ type binop = And | Or | Imp | Eq
 type fmla =
   | True
   | False
-  | AP of int
+  | AP of string
   | Not of fmla
   | Bin of fmla * binop * fmla
-  | Know of int * fmla
+  | Know of string * fmla
 
 (*****************************************************************************)
 
@@ -23,15 +23,36 @@ let string_of_binop (op: binop) : string =
   | Imp -> "Imp"
   | Eq  -> "Eq"
 
-let rec string_of_fmla (f: fmla) =
+let rec string_of_fmla (f: fmla) : string =
   match f with
   | True           -> "True"
   | False          -> "False"
-  | AP x           -> "AP(" ^ string_of_int x ^ ")"
-  | Not g          -> "Not(" ^ string_of_fmla g ^ ")"
-  | Bin (g, op, h) -> "Bin(" ^ string_of_fmla g ^ ", " ^ string_of_binop op ^ ", " ^ string_of_fmla h ^ ")"
-  | Know (i, g)    -> "Know(" ^ string_of_int i ^ ", " ^ string_of_fmla g ^ ")"
+  | AP p           -> "AP \"" ^ p ^ "\""
+  | Not g          -> "Not (" ^ string_of_fmla g ^ ")"
+  | Bin (g, op, h) -> "Bin (" ^ string_of_fmla g ^ ", " ^ string_of_binop op ^ ", " ^ string_of_fmla h ^ ")"
+  | Know (a, g)    -> "Know (\"" ^ a ^ "\", " ^ string_of_fmla g ^ ")"
 
+(*****************************************************************************)
+
+let aps_of_fmla (f: fmla) : string list =
+  let rec aux (f: fmla) : StringSet.t =
+    match f with
+    | Not (g)       -> aux g
+    | Bin (g, _, h) -> StringSet.union (aux g) (aux h)
+    | Know (_, g)   -> aux g
+    | AP p          -> StringSet.singleton p
+    | _             -> StringSet.empty
+  in StringSet.to_list (aux f)
+
+let ags_of_fmla (f: fmla) : string list =
+  let rec aux (f: fmla) : StringSet.t =
+    match f with
+    | Not (g)       -> aux g
+    | Bin (g, _, h) -> StringSet.union (aux g) (aux h)
+    | Know (a, g)   -> StringSet.add a (aux g)
+    | _             -> StringSet.empty
+  in StringSet.to_list (aux f)
+  
 (*****************************************************************************)
 
 let rec modal_depth_of_fmla (f: fmla) : int =
@@ -50,37 +71,6 @@ let rec size_of_fmla (f: fmla) : int =
 
 (*****************************************************************************)
 
-let rec max_ap_in_fmla (f: fmla) : int =
-  match f with
-  | AP(i)         -> i
-  | Not(g)        -> max_ap_in_fmla g
-  | Bin (g, _, h) -> max (max_ap_in_fmla g) (max_ap_in_fmla h)
-  | Know(_, g )   -> max_ap_in_fmla g
-  | _             -> 0
-
-let rec max_ag_in_fmla (f: fmla) : int =
-  match f with
-  | Not(g)        -> max_ag_in_fmla g
-  | Bin (g, _, h) -> max (max_ag_in_fmla g) (max_ag_in_fmla h)
-  | Know(a, g)    -> max a (max_ag_in_fmla g)
-  | _             -> 0
-
-(*****************************************************************************)
-
-(**
-  [legend pre n] returns an array of size [n+1] with elements
-  [pre ^ "0"], [pre ^ "1"], ..., [pre ^ (string_of_int n)].
-*)
-let legend (pre: string) (n: int) =
-  Array.init (n+1) (((^) pre) << string_of_int)
-
-let default_legend (f: fmla) : string array * string array =
-  let aps = max_ap_in_fmla f |> legend "p_" in
-  let ags = max_ag_in_fmla f |> legend ""   in
-  (aps, ags)
-  
-(*****************************************************************************)
-
 (**
   [pp_of_binop op] returns the string representation of binary operator [op].
 *)
@@ -91,11 +81,11 @@ let pp_of_binop (op: binop) : string =
   | Imp -> "\u{2192}"
   | Eq  -> "\u{2194}"
 
-let rec pp_of_fmla (aps: string array) (ags: string array) (f: fmla) : string =
+let rec pp_of_fmla (f: fmla) : string =
   match f with
   | True           -> "⊤"
   | False          -> "⊥"
-  | AP i           -> aps.(i)
-  | Not g          -> "\u{00ac}" ^ pp_of_fmla aps ags g
-  | Bin (g, op, h) -> "(" ^ pp_of_fmla aps ags g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla aps ags h ^ ")"
-  | Know (i, g)    -> "K_" ^ ags.(i) ^ " " ^ pp_of_fmla aps ags g ^ ""
+  | AP p           -> p
+  | Not g          -> "\u{00ac}" ^ pp_of_fmla g
+  | Bin (g, op, h) -> "(" ^ pp_of_fmla g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla h ^ ")"
+  | Know (a, g)    -> "K_" ^ a ^ " " ^ pp_of_fmla g ^ ""

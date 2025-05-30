@@ -4,22 +4,24 @@ type 'a relation = ('a * 'a) list
 
 type event = {
     pre : fmla;
-    post : fmla option array;
+    post : (string * fmla) list;
 }
 
-val post : event -> int -> fmla
+val post : event -> string -> fmla
 
-val max_ap_in_events : event list -> int
+val aps_of_events : event list -> string list
 
-val size_of_event : int -> event -> int
+val size_of_event : event -> int
+
+type 'a arrows = (string * 'a relation) list (* is [(->)_a], with [a] an agent *)
 
 type event_model = {
     events : event list;
-    rels : event relation array;
+    rels : event arrows;
 }
 
 type action = event_model * event
 
 val size_of_event_model : event_model -> int
 
-val pp_of_event : string array -> string array -> event -> string
+val pp_of_event : event -> string
