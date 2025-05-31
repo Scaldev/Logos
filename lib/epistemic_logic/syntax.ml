@@ -45,7 +45,10 @@ let aps_of_fmla (f: fmla) : string list =
     | Know (_, g)   -> aux g
     | AP p          -> StringSet.singleton p
     | _             -> StringSet.empty
-  in StringSet.to_list (aux f)
+  in
+  aux f
+  |> StringSet.to_list
+  |> List.sort String.compare
 
 (*****************************************************************************)
 
@@ -56,7 +59,10 @@ let ags_of_fmla (f: fmla) : string list =
     | Bin (g, _, h) -> StringSet.union (aux g) (aux h)
     | Know (a, g)   -> StringSet.add a (aux g)
     | _             -> StringSet.empty
-  in StringSet.to_list (aux f)
+  in
+  aux f
+  |> StringSet.to_list
+  |> List.sort String.compare
   
 (*****************************************************************************)
 

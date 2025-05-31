@@ -29,6 +29,12 @@ let size_of_event (e: event) : int =
   
 (*****************************************************************************)
 
+let union_aps_post ((p, f): string * fmla) : StringSet.t -> StringSet.t =
+  aps_of_fmla f
+  |> StringSet.of_list
+  |> StringSet.add p
+  |> StringSet.union
+
 (**
   [aps_of_events e] returns all atomic propositions mentionned in the precondition
   or one of the postconditions of [e].
@@ -36,13 +42,14 @@ let size_of_event (e: event) : int =
   [e.pre.(p) <> p].
 *)
 let aps_of_event (e: event) : StringSet.t =
-  let f = StringSet.union << StringSet.of_list << aps_of_fmla << snd in
   StringSet.union
     (StringSet.of_list (aps_of_fmla e.pre))
-    (List.fold_right f e.post (StringSet.empty))
+    (List.fold_right union_aps_post e.post StringSet.empty)
 
 let aps_of_events (es: event list): string list =
-  StringSet.to_list (List.fold_right (StringSet.union << aps_of_event) es (StringSet.empty))
+  List.fold_right (StringSet.union << aps_of_event) es (StringSet.empty)
+  |> StringSet.to_list
+  |> List.sort String.compare
 
 (*****************************************************************************)
 

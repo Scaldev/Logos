@@ -164,4 +164,4 @@ let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list
     (fst ts, List.map (fun t -> Alcotest.test_case "" `Quick t) (snd ts))
   ) tss
 
-let () = Alcotest.run "Epistemic logic (syntax)" (format_tests tests) 
+let () = Alcotest.run "Epistemic logic - syntax" (format_tests tests) 
