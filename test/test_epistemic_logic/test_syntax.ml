@@ -1,12 +1,5 @@
 open Epistemic_logic
 
-(*
-let pp_fmla fmt f =
-  Format.fprintf fmt "%s" (string_of_fmla f)
-
-let formula_testable = Alcotest.testable pp_fmla (=)
-*)
-
 (*************************************************************************)
 (*                             string_of_fmla                            *)
 (*************************************************************************)
@@ -22,14 +15,64 @@ let test_string_of_fmla_1 () =
   Alcotest.(check string) "" expected obtained
 
 let test_string_of_fmla_2 () =
-  let expected = "Bin (Bin (AP \"a\", Imp, AP \"p\"), And, Bin (AP \"q\", Eq, AP \"r\"))" in
-  let obtained = string_of_fmla (Bin (Bin (AP "a", Imp, AP "p"), And, Bin(AP "q", Eq, AP "r"))) in
+  let expected = "Bin (Bin (AP \"r\", Imp, AP \"p\"), And, Bin (AP \"q\", Eq, AP \"r\"))" in
+  let obtained = string_of_fmla (Bin (Bin (AP "r", Imp, AP "p"), And, Bin(AP "q", Eq, AP "r"))) in
   Alcotest.(check string) "" expected obtained
   
-let tests_string_of_fmla = [
+let tests_string_of_fmla = "string_of_fmla", [
   test_string_of_fmla_0;
   test_string_of_fmla_1;
   test_string_of_fmla_2;
+]
+
+(*************************************************************************)
+(*                               aps_of_fmla                             *)
+(*************************************************************************)
+
+let test_aps_of_fmla_0 () =
+  let expected = ["p"] in
+  let obtained = aps_of_fmla (Know ("a", AP "p")) in
+  Alcotest.(check (list string)) "" expected obtained
+
+let test_aps_of_fmla_1 () =
+  let expected = [] in
+  let obtained = aps_of_fmla (Not (Bin (True, Or, False))) in
+  Alcotest.(check (list string)) "" expected obtained
+
+let test_aps_of_fmla_2 () =
+  let expected = ["p";"q"; "r"] in
+  let obtained = aps_of_fmla (Bin (Bin (AP "p", Imp, AP "q"), And, Bin(AP "q", Eq, AP "r"))) in
+  Alcotest.(check (list string)) "" expected obtained
+  
+let tests_aps_of_fmla = "aps_of_fmla", [
+  test_aps_of_fmla_0;
+  test_aps_of_fmla_1;
+  test_aps_of_fmla_2;
+]
+
+(*************************************************************************)
+(*                               ags_of_fmla                             *)
+(*************************************************************************)
+
+let test_ags_of_fmla_0 () =
+  let expected = ["a"] in
+  let obtained = ags_of_fmla (Know ("a", AP "p")) in
+  Alcotest.(check (list string)) "" expected obtained
+
+let test_ags_of_fmla_1 () =
+  let expected = [] in
+  let obtained = ags_of_fmla (Not (Bin (True, Or, False))) in
+  Alcotest.(check (list string)) "" expected obtained
+
+let test_ags_of_fmla_2 () =
+  let expected = ["a"; "b"; "c"] in
+  let obtained = ags_of_fmla (Bin (Know ("a", Know ("b", AP "p")), And, Not (Know ("c", AP "q")))) in
+  Alcotest.(check (list string)) "" expected obtained
+  
+let tests_ags_of_fmla = "ags_of_fmla", [
+  test_ags_of_fmla_0;
+  test_ags_of_fmla_1;
+  test_ags_of_fmla_2;
 ]
 
 (*************************************************************************)
@@ -46,7 +89,7 @@ let test_modal_depth_of_fmla_1 () =
   let obtained = modal_depth_of_fmla (Know ("a", Bin(AP "p", And, Not (AP "q")))) in
   Alcotest.(check int) "" expected obtained
 
-let tests_modal_depth_of_fmla = [
+let tests_modal_depth_of_fmla = "modal_depth_of_fmla", [
   test_modal_depth_of_fmla_0;
   test_modal_depth_of_fmla_1;
 ]
@@ -65,7 +108,7 @@ let test_size_of_fmla_1 () =
   let obtained = size_of_fmla (Know ("a", Bin(AP "p", And, Not (AP "q")))) in
   Alcotest.(check int) "" expected obtained
 
-let tests_size_of_fmla = [
+let tests_size_of_fmla = "size_of_fmla", [
   test_size_of_fmla_0;
   test_size_of_fmla_1;
 ]
@@ -98,7 +141,7 @@ let test_pp_of_fmla_3 () =
   let obtained = pp_of_fmla f in
   Alcotest.(check string) "" expected obtained
 
-let tests_pp_of_fmla = [
+let tests_pp_of_fmla = "pp_of_fmla", [
   test_pp_of_fmla_0;
   test_pp_of_fmla_1;
   test_pp_of_fmla_2;
@@ -108,10 +151,12 @@ let tests_pp_of_fmla = [
 (*************************************************************************)
 
 let tests = [
-  "string_of_fmla",       tests_string_of_fmla;
-  "tests_pp_of_fmla",     tests_pp_of_fmla;
-  "modal_depth_of_fmla",  tests_modal_depth_of_fmla;
-  "size_of_fmla",         tests_size_of_fmla;
+  tests_string_of_fmla;
+  tests_aps_of_fmla;
+  tests_ags_of_fmla;
+  tests_pp_of_fmla;
+  tests_modal_depth_of_fmla;
+  tests_size_of_fmla;
 ]
 
 let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list) =
