@@ -13,8 +13,10 @@ type world = {
 
 type kripke_model = {
   domain: world list;
-  rels: world relations;
+  relations: world relations;
 }
+
+exception UnknownAgent of string
 
 (*****************************************************************************)
 
@@ -23,7 +25,7 @@ type kripke_model = {
 *)
 let size_of_kripke_model (km: kripke_model) : int =
   List.length km.domain
-  + List.fold_right ((+) << List.length << snd) km.rels 0
+  + List.fold_right ((+) << List.length << snd) km.relations 0
   + List.fold_right ((+) << (fun w -> List.length w.valuation)) km.domain 0
 
 (*****************************************************************************)
@@ -37,15 +39,15 @@ let is_symmetric (r: 'a relation) : bool =
   List.for_all (fun (u, v) -> Hashtbl.mem tbl (v, u)) r
   
 let is_S5_model (km: kripke_model) : bool =
-  List.for_all (is_symmetric << snd) km.rels
+  List.for_all (is_symmetric << snd) km.relations
 
 (*****************************************************************************)
 
 type state = kripke_model * world (* id of the actual world *)
 
-let relation_of_agent (rels: (string * world relation) list) (a: string) : world relation =
-  match List.find_opt (((=) a) << fst) rels with
-  | None   -> []
+let relation_of_agent (relations: (string * world relation) list) (a: string) : world relation =
+  match List.find_opt (((=) a) << fst) relations with
+  | None   -> raise (UnknownAgent a)
   | Some r -> snd r
   
 (**
@@ -58,14 +60,14 @@ let rec is_non_contradictory_belief (s: state) (f: fmla) (rel_a: world relation)
 and eval (s: state) (f: fmla) : bool =
   let (km, w) = s in
   match f with
-  | True           -> true
-  | False          -> false
-  | AP(p)          -> List.mem p w.valuation
-  | Not(g)         -> not (eval s g)
-  | Bin(g, And, h) -> eval s g && eval s h
-  | Bin(g, Or,  h) -> eval s g || eval s h
-  | Bin(g, Imp, h) -> not (eval s g) || eval s h
-  | Bin(g, Eq,  h) -> eval s g == eval s h
-  | Know(a, g)     -> is_non_contradictory_belief s g (relation_of_agent km.rels a)
+  | True            -> true
+  | False           -> false
+  | AP p            -> List.mem p w.valuation
+  | Not g           -> not (eval s g)
+  | Bin (g, And, h) -> eval s g && eval s h
+  | Bin (g, Or,  h) -> eval s g || eval s h
+  | Bin (g, Imp, h) -> not (eval s g) || eval s h
+  | Bin (g, Eq,  h) -> eval s g == eval s h
+  | Know (a, g)     -> is_non_contradictory_belief s g (relation_of_agent km.relations a)
 
 let (|=) = eval

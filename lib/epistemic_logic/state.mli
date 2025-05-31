@@ -9,8 +9,10 @@ type world = {
 
 type kripke_model = {
     domain : world list;
-    rels : (string * world relation) list;
+    relations : (string * world relation) list;
 }
+
+exception UnknownAgent of string
 
 type state = kripke_model * world
 

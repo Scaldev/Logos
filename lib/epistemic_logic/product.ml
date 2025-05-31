@@ -74,9 +74,9 @@ let product_update (s: state) (alpha: action) : state =
   let (em, e) = alpha in
 
   let ws' = extend_worlds km em.events in
-  let ws_rels' = new_relation_of_agents km.rels em.relations ws' in
+  let ws_rels' = new_relation_of_agents km.relations em.relations ws' in
 
-  let km' = { domain = ws'; rels = ws_rels' } in
+  let km' = { domain = ws'; relations = ws_rels' } in
   let u' = world_after_event km em.events w e in
 
   (km', u')

@@ -20,14 +20,13 @@ let e2 = {
   post = [ "m_a", False ; "m_b", False ]
 }
 
-let r1a = [ e1, e1 ; e1, e2 ; e2, e2 ]
+let r1a = [ e1, e1 ; e1, e2 ; e2, e1 ; e2, e2 ]
 let r1b = [ e1, e1 ; e2, e2 ]
 
 let em1 = {
   events    = [ e1 ; e2 ];
   relations = [ "a", r1a ; "b", r1b ]
 }
-let send_ab = (em1, e1)
 
 (* Create send_ba action *)
 
@@ -41,21 +40,16 @@ let e4 = {
 }
 
 let r2a = [ e3, e3 ; e4, e4 ]
-let r2b = [ e3, e3 ; e3, e4 ; e4, e4 ]
+let r2b = [ e3, e3 ; e3, e4 ; e4, e3 ; e4, e4 ]
 
 let em2 = {
   events    = [ e3 ; e4 ];
   relations = [ "a", r2a ; "b", r2b ]
 }
-let send_ba = (em2, e3)
 
 (* Other events *)
 
 let e5 = { pre  = AP "\xff"; post = [] }
-
-let b = send_ab == send_ba
-
-let () = print_string (string_of_bool b)
 
 (*****************************************************************************)
 (*                                    post                                   *)
@@ -163,11 +157,17 @@ let tests_pp_of_event = "pp_of_event", [
 
 let test_size_of_event_model_0 () =
   let obtained = size_of_event_model em1 in
-  let expected = 15 in (* 2 + (2+3) + (5+3) *)
+  let expected = 16 in (* 2 + (2+4) + (5+3) *)
+  Alcotest.(check int) "" expected obtained
+
+let test_size_of_event_model_1 () =
+  let obtained = size_of_event_model em2 in
+  let expected = 16 in (* 2 + (2+4) + (5+3) *)
   Alcotest.(check int) "" expected obtained
 
 let tests_size_of_event_model = "size_of_event_model", [
   test_size_of_event_model_0;
+  test_size_of_event_model_1;
 ]
 
 (*****************************************************************************)
