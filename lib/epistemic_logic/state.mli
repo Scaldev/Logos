@@ -1,4 +1,4 @@
-include module type of Actions
+include module type of Action
 
 type 'a relation = ('a * 'a) list
 

@@ -3,5 +3,9 @@
  (libraries logica alcotest))
 
 (test
- (name test_actions)
+ (name test_action)
+ (libraries logica alcotest))
+
+(test
+ (name test_state)
  (libraries logica alcotest))

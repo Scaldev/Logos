@@ -1,4 +1,4 @@
-include Actions
+include Action
 
 let (<<) = Fun.compose
 
