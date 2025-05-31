@@ -16,6 +16,9 @@ type fmla =
 
 (*****************************************************************************)
 
+(**
+  [string_of_binop op] returns the string representation of [op].
+*)
 let string_of_binop (op: binop) : string =
   match op with
   | And -> "And"
@@ -61,6 +64,8 @@ let rec modal_depth_of_fmla (f: fmla) : int =
   | Bin (g, _, h) -> max (modal_depth_of_fmla g) (modal_depth_of_fmla h)
   | Know (_, g)   -> 1 + modal_depth_of_fmla g
   | _             -> 0
+
+(*****************************************************************************)
 
 let rec size_of_fmla (f: fmla) : int =
   match f with

@@ -2,19 +2,21 @@ include Actions
 
 let (<<) = Fun.compose
 
-(*************************************************************************)
-(*                              Kripke model                             *)
-(*************************************************************************)
+(*****************************************************************************)
+(*                            World & Kripke model                           *)
+(*****************************************************************************)
 
 type world = {
-  history: event list;            (* events leading to this world *)
-  valuation: string list          (* atomic propositions true in that world *)
+  history: event list;     (* events leading to this world *)
+  valuation: string list   (* atomic propositions true in that world *)
 }
 
 type kripke_model = {
-  domain: world list;                  (* W *)
-  rels: (string * world relation) list; (* subset of W x W *)
+  domain: world list;
+  rels: world relations;
 }
+
+(*****************************************************************************)
 
 (**
   [size_of_kripke_model km] returns the size of the Kripke model [km].
@@ -23,6 +25,8 @@ let size_of_kripke_model (km: kripke_model) : int =
   List.length km.domain
   + List.fold_right ((+) << List.length << snd) km.rels 0
   + List.fold_right ((+) << (fun w -> List.length w.valuation)) km.domain 0
+
+(*****************************************************************************)
 
 (**
   [is_symmetric r] returns [true] iff each [x -> x'] in [r] implies that [x' -> x] is in [r].

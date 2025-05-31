@@ -8,8 +8,14 @@ type fmla =
   | Bin of fmla * binop * fmla
   | Know of string * fmla
 
+(**
+  [aps_of_fmla f] returns the atomic propositions in [f].
+*)
 val aps_of_fmla : fmla -> string list
 
+(**
+  [ags_of_fmla f] returns the agents in [f].
+*)
 val ags_of_fmla : fmla -> string list
 
 (**
