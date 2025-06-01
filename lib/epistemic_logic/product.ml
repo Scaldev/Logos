@@ -9,7 +9,7 @@ include State
   actual event of the action [alpha].
 *)
 let is_applicable (s: state) (alpha: action) : bool =
-  s |= (snd alpha).pre
+  s |= (alpha.actual).pre
 
 (*************************************************************************)
 
@@ -60,13 +60,12 @@ let new_relation_of_agents (km: kripke_model) (eas: event relations) (ws: world 
 let product_update (s: state) (alpha: action) : state =
 
   let (km, w) = s in
-  let (em, e) = alpha in
 
-  let ws' = extend_worlds km em.events in
-  let ws_rels' = new_relation_of_agents km em.relations ws' in
+  let ws' = extend_worlds km alpha.model.events in
+  let ws_rels' = new_relation_of_agents km alpha.model.relations ws' in
 
   let km' = { domain = ws'; relations = ws_rels' } in
-  let u' = world_after_event km em.events w e in
+  let u' = world_after_event km alpha.model.events w alpha.actual in
 
   (km', u')
 

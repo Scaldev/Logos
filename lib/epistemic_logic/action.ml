@@ -75,7 +75,11 @@ type event_model = {
   relations: event relations;
 }
 
-type action = event_model * event
+type action = {
+  name: string;
+  model: event_model;
+  actual: event
+}
 
 exception UnknownActualEvent of event
 

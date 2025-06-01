@@ -28,7 +28,11 @@ let em1 = {
   relations = [ "a", r1a ; "b", r1b ]
 }
 
-let send_ab = em1, e1
+let send_ab = {
+  name   = "send_ab success";
+  model  = em1;
+  actual = e1
+}
 
 (* Create send_ba action *)
 
@@ -49,7 +53,11 @@ let em2 = {
   relations = [ "a", r2a ; "b", r2b ]
 }
 
-let send_ba = em2, e3
+let send_ba = {
+  name   = "send_ba success";
+  model  = em2;
+  actual = e3
+}
 
 
 (* State 0 *)

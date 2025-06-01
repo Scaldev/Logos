@@ -46,7 +46,7 @@ let is_S5_model (km: kripke_model) : bool =
 (*****************************************************************************)
 
 let pp_of_world_name (asso: (world * int) list) (w: world) : string =
-  "w_" ^ string_of_int (List.assoc w asso)
+  "w^" ^ (string_of_int (List.length w.history)) ^ "_" ^ string_of_int (List.assoc w asso)
 
 let pp_of_world (asso: (world * int) list) (w: world) : string =
   let pp_val = String.concat ", " w.valuation in
