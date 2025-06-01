@@ -3,4 +3,4 @@
 (library
  (name demos)
  (wrapped false)
- (libraries logica))
+ (libraries logos))

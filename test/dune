@@ -1,3 +1,0 @@
-(test
- (name test_logica)
- (libraries alcotest logica))

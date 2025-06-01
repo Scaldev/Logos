@@ -1,15 +1,15 @@
 (test
  (name test_syntax)
- (libraries logica alcotest))
+ (libraries logos alcotest))
 
 (test
  (name test_action)
- (libraries logica alcotest))
+ (libraries logos alcotest))
 
 (test
  (name test_state)
- (libraries logica alcotest))
+ (libraries logos alcotest))
 
 (test
  (name test_product)
- (libraries logica alcotest))
+ (libraries logos alcotest))
