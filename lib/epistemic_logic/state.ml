@@ -1,5 +1,7 @@
 include Action
 
+open Table
+
 let (<<) = Fun.compose
 
 (*****************************************************************************)
@@ -7,8 +9,8 @@ let (<<) = Fun.compose
 (*****************************************************************************)
 
 type world = {
-  history: event list;     (* events leading to this world *)
-  valuation: string list   (* atomic propositions true in that world *)
+  history: (world * event) list; (* events leading to this world *)
+  valuation: string list         (* atomic propositions true in that world *)
 }
 
 type kripke_model = {
@@ -43,7 +45,50 @@ let is_S5_model (km: kripke_model) : bool =
 
 (*****************************************************************************)
 
-type state = kripke_model * world (* id of the actual world *)
+let pp_of_world_name (asso: (world * int) list) (w: world) : string =
+  "w_" ^ string_of_int (List.assoc w asso)
+
+let pp_of_world (asso: (world * int) list) (w: world) : string =
+  let pp_val = String.concat ", " w.valuation in
+  "   " ^ pp_of_world_name asso w ^ " : " ^ pp_val ^ " "
+
+let pp_of_worlds (asso: (world * int) list) (ws: world list) : string list =
+  " worlds: " :: List.map (pp_of_world asso) ws
+
+let pp_of_edge (asso: (world * int) list) ((u, u'): world * world) : string =
+  "(" ^ (pp_of_world_name asso u) ^ ", " ^ (pp_of_world_name asso u') ^ ")"
+
+let pp_of_relation (asso: (world * int) list) ((a, r): string * world relation) : string =
+  let pp_edges = String.concat ", " (List.map (pp_of_edge asso) r) in
+  "   \u{2192}_" ^ a ^ " = { " ^ pp_edges ^ " } "
+
+let pp_of_relations (asso: (world * int) list) (rs: world relations) : string list =
+  " relations: " :: List.map (pp_of_relation asso) rs
+
+let pp_of_kripke_model (km: kripke_model) : string =
+  let asso = List.mapi (fun i w -> (w, i+1)) km.domain in
+  table_of_cells [ pp_of_worlds asso km.domain ; pp_of_relations asso km.relations ]
+
+(*****************************************************************************)
+(*                                   State                                   *)
+(*****************************************************************************)
+
+type state = kripke_model * world
+
+exception UnknownActualWorld of world
+
+(*****************************************************************************)
+
+let pp_of_state (s: state) : string =
+  let (km, w) = s in
+  let w_i = List.find_index ((=) w) km.domain in
+  match w_i with
+  | None -> raise (UnknownActualWorld w)
+  | Some i -> 
+    "State with actual world w_" ^ (string_of_int (i+1)) ^ ":\n" ^ (pp_of_kripke_model (fst s))
+
+
+(*****************************************************************************)
 
 let relation_of_agent (relations: (string * world relation) list) (a: string) : world relation =
   match List.find_opt (((=) a) << fst) relations with

@@ -50,6 +50,8 @@ type event_model = {
 
 type action = event_model * event
 
+exception UnknownActualEvent of event
+
 (**
   [size_of_event_model em] returns the size of the event model [em].
 *)

@@ -25,6 +25,11 @@ let km2 = {
   relations = [r_a ; r_b']
 }
 
+let km3 = {
+  domain = [];
+  relations = [];
+}
+
 (*************************************************************************)
 (*                          size_of_kripke_model                         *)
 (*************************************************************************)
@@ -55,6 +60,75 @@ let test_is_S5_model_1 () =
 let tests_is_S5_model = "is_S5_model", [
   test_is_S5_model_0;
   test_is_S5_model_1;
+]
+
+(*************************************************************************)
+(*                           pp_of_kripke_model                          *)
+(*************************************************************************)
+
+let test_pp_of_kripke_model_0 () =
+  let expected = "\
+    +------------+\n\
+    | worlds:    |\n\
+    +------------+\n\
+    | relations: |\n\
+    +------------+\n"
+  in
+  let obtained = pp_of_kripke_model km3 in
+  Alcotest.(check string) "" expected obtained
+
+let test_pp_of_kripke_model_1 () =
+  let expected = "\
+    +------------------------------------------------------------+\n\
+    | worlds:                                                    |\n\
+    |   w_1 : d, m_a                                             |\n\
+    |   w_2 : m_a                                                |\n\
+    +------------------------------------------------------------+\n\
+    | relations:                                                 |\n\
+    |   →_a = { (w_1, w_1), (w_2, w_2) }                         |\n\
+    |   →_b = { (w_1, w_1), (w_1, w_2), (w_2, w_1), (w_2, w_2) } |\n\
+    +------------------------------------------------------------+\n"
+  in
+  let obtained = pp_of_kripke_model km1 in
+  Alcotest.(check string) "" expected obtained
+
+let tests_pp_of_kripke_model = "pp_of_kripke_model", [
+  test_pp_of_kripke_model_0;
+  test_pp_of_kripke_model_1;
+]
+
+(*************************************************************************)
+(*                              pp_of_state                              *)
+(*************************************************************************)
+
+let test_pp_of_state_0 () =
+  let expected = "\
+    State with actual world w_1:\n\
+    +------------------------------------------------------------+\n\
+    | worlds:                                                    |\n\
+    |   w_1 : d, m_a                                             |\n\
+    |   w_2 : m_a                                                |\n\
+    +------------------------------------------------------------+\n\
+    | relations:                                                 |\n\
+    |   →_a = { (w_1, w_1), (w_2, w_2) }                         |\n\
+    |   →_b = { (w_1, w_1), (w_1, w_2), (w_2, w_1), (w_2, w_2) } |\n\
+    +------------------------------------------------------------+\n"
+  in
+  let obtained = pp_of_state s1 in
+  Alcotest.(check string) "" expected obtained
+
+let test_pp_of_state_1 () =
+  let w0 = {valuation=[]; history=[]} in
+  try
+    let _ = pp_of_state (km1, w0) in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownActualWorld _ -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+
+let tests_pp_of_state = "pp_of_state", [
+  test_pp_of_state_0;
+  test_pp_of_state_1;
 ]
 
 (*************************************************************************)
@@ -135,6 +209,8 @@ let tests_eval = "test_eval", [
 let tests = [
   tests_size_of_kripke_model;
   tests_is_S5_model;
+  tests_pp_of_kripke_model;
+  tests_pp_of_state;
   tests_eval;
 ]
 

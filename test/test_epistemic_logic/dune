@@ -9,3 +9,7 @@
 (test
  (name test_state)
  (libraries logica alcotest))
+
+(test
+ (name test_product)
+ (libraries logica alcotest))

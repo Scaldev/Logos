@@ -1,7 +1,5 @@
 include State
 
-let (<<) = Fun.compose
-
 (*************************************************************************)
 (*                             Product update                            *)
 (*************************************************************************)
@@ -16,13 +14,10 @@ let is_applicable (s: state) (alpha: action) : bool =
 (*************************************************************************)
 
 let valuation_of_world (km: kripke_model) (events: event list) (u: world) (e: event) : string list =
-  aps_of_events events
-  |> List.map (fun p -> (p, post e p))
-  |> List.filter (fun (p, p') -> AP p <> p' || (km, u) |= p')
-  |> List.map fst
+  List.filter (fun p -> (km, u) |= post e p) (aps_of_events events)
 
 let world_after_event (km: kripke_model) (events: event list) (w: world) (e: event) : world =
-  { history = e :: w.history; valuation = valuation_of_world km events w e }
+  { history = (w, e) :: w.history; valuation = valuation_of_world km events w e }
     
 let extend_world (km: kripke_model) (events: event list) (u: world) : world list =
   events
@@ -36,32 +31,26 @@ let extend_worlds (km: kripke_model) (events: event list) : world list =
 
 (*************************************************************************)
 
-let relation_of_agent (ars: 'a relations) (a: string) : 'a relation =
-  snd (List.find ((=) a << fst) ars)
+let undistinguishable_for_agent (km: kripke_model) (eas: event relations) (a: string) ((w, w'): world * world) : bool =
+  let (u, e) = List.hd w.history in
+  let (u', e') = List.hd w'.history in
+  List.mem (u, u') (List.assoc a km.relations) && List.mem (e, e') (List.assoc a eas)
 
-(**
-  [undistinguishable_for_agent ws_rels ev_rels a p] returns [true] iff [u ->_a u']
-  and [e ->_a e'], where [p = (u, u')], [e] is the last event of world [u] and [e']
-  is the last event of world [u'].
-*)
-let undistinguishable_for_agent (was: world relations) (eas: event relations) (a: string) (p: world * world) : bool =
-  let (u, u') = p in
-  let e  = List.hd u.history in
-  let e' = List.hd u'.history in
-  List.mem (u, u') (relation_of_agent was a) && List.mem (e, e') (relation_of_agent eas a)
+let cartesian_product (xs: 'a list) (ys: 'b list) : ('a * 'b) list =
+  List.flatten (List.map (fun x -> List.map (fun y -> (x, y)) ys) xs)
 
 (**
   [relation_of_agent ws_rels ev_rels ws a] returns the relation [r] of agent [a] on the domain [ws],
   that is, the links between worlds that [a] cannot tell apart.
 *)
-let new_relation_of_agent (was: world relations) (eas: event relations) (ws: world list) (a: string) : world relation =
-  List.filter (undistinguishable_for_agent was eas a) (List.combine ws ws)
+let new_relation_of_agent (km: kripke_model) (eas: event relations) (ws: world list) (a: string) : world relation =
+  List.filter (undistinguishable_for_agent km eas a) (cartesian_product ws ws)
 
 (**
   [relation_of_agents ws ws_rels ev_rels] returns the relation of every agent on the domain [ws].
 *)
-let new_relation_of_agents (was: world relations) (eas: event relations) (ws: world list) : world relations =
-  List.map (fun (a, _) -> a, new_relation_of_agent was eas ws a) was
+let new_relation_of_agents (km: kripke_model) (eas: event relations) (ws: world list) : world relations =
+  List.map (fun (a, _) -> a, new_relation_of_agent km eas ws a) km.relations
 
 (*************************************************************************)
 
@@ -74,7 +63,7 @@ let product_update (s: state) (alpha: action) : state =
   let (em, e) = alpha in
 
   let ws' = extend_worlds km em.events in
-  let ws_rels' = new_relation_of_agents km.relations em.relations ws' in
+  let ws_rels' = new_relation_of_agents km em.relations ws' in
 
   let km' = { domain = ws'; relations = ws_rels' } in
   let u' = world_after_event km em.events w e in

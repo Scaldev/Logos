@@ -3,7 +3,7 @@ include module type of Action
 type 'a relation = ('a * 'a) list
 
 type world = {
-    history : event list;
+    history : (world * event) list;
     valuation : string list;
 }
 
@@ -12,12 +12,18 @@ type kripke_model = {
     relations : (string * world relation) list;
 }
 
+val size_of_kripke_model : kripke_model -> int
+
+val is_S5_model : kripke_model -> bool
+
+val pp_of_kripke_model : kripke_model -> string
+
 exception UnknownAgent of string
 
 type state = kripke_model * world
 
-val size_of_kripke_model : kripke_model -> int
+exception UnknownActualWorld of world
 
-val is_S5_model : kripke_model -> bool
+val pp_of_state : state -> string
 
 val ( |= ) : state -> fmla -> bool
