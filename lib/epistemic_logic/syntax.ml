@@ -48,7 +48,7 @@ let rec max_ap_in_fmla (f: fmla) : int =
   | Not (g)       -> max_ap_in_fmla g
   | Bin (g, _, h) -> max (max_ap_in_fmla g) (max_ap_in_fmla h)
   | Know (_, g)   -> max_ap_in_fmla g
-  | _             -> 0
+  | _             -> -1
 
 (*****************************************************************************)
 
@@ -57,10 +57,14 @@ let rec max_ag_in_fmla (f: fmla) : int =
   | Not (g)       -> max_ag_in_fmla g
   | Bin (g, _, h) -> max (max_ag_in_fmla g) (max_ag_in_fmla h)
   | Know (a, g)   -> max a (max_ag_in_fmla g)
-  | _             -> 0
+  | _             -> -1
 
 (*****************************************************************************)
 
+(**
+  [map_fmla aps ags f] returns the formula [f] after mapping each atomic proposition
+  integer [p] to [aps.(p)] and each agent integer [a] to [ags.(a)].
+*)
 let rec map_fmla (aps: int array) (ags: int array) (f: fmla) : fmla =
   match f with
   | True           -> True
@@ -70,17 +74,20 @@ let rec map_fmla (aps: int array) (ags: int array) (f: fmla) : fmla =
   | Bin (g, op, h) -> Bin (map_fmla aps ags g, op, map_fmla aps ags h)
   | Know (a, g)    -> Know (ags.(a), map_fmla aps ags g)
 
+(**
+  [count_trues arr] returns an [arr'] array of integers, such that [arr.(i)]
+  is the [n]-th value of [arr] to be true, left to right.
+*)
 let count_trues (arr: bool array) : int array =
-  let arr_aps = Array.make (Array.length arr) 0 in
-  let c = ref 0 in
-  Array.iteri (fun i b -> if b then c := !c + 1; arr_aps.(i) <- !c) arr;
-  arr_aps
-
+  let arr' = Array.make (Array.length arr) 0 in
+  let c = ref (-1) in
+  Array.iteri (fun i b -> if b then c := !c + 1; arr'.(i) <- !c) arr;
+  arr'
 
 let reduce_fmla (f: fmla) : fmla =
 
-  let arr_aps = Array.make (max_ap_in_fmla f) false in
-  let arr_ags = Array.make (max_ag_in_fmla f) false in
+  let arr_aps = Array.make (max_ap_in_fmla f + 1) false in
+  let arr_ags = Array.make (max_ag_in_fmla f + 1) false in
 
   let rec aux (f: fmla) : unit =
     match f with
@@ -90,7 +97,7 @@ let reduce_fmla (f: fmla) : fmla =
     | AP p          -> arr_aps.(p) <- true;
     | _             -> ()
   in aux f;
-  map_fmla (count_trues arr_ags) (count_trues arr_aps) f
+  map_fmla (count_trues arr_aps) (count_trues arr_ags) f
 
 
   
@@ -124,14 +131,18 @@ let pp_of_binop (op: binop) : string =
   | Imp -> "\u{2192}"
   | Eq  -> "\u{2194}"
 
-let pp_of_variable (vars: string array) (p: int) : string =
+(**
+  [pp_of_value vars p] returns a pretty-print of [p] according to [vars]
+  if possible, and [p] as a string if not.
+*)
+let pp_of_value (vars: string array) (p: int) : string =
   if p < 0 || p >= Array.length vars then string_of_int p else vars.(p)
 
 let rec pp_of_fmla (c: context) (f: fmla) : string =
   match f with
   | True           -> "⊤"
   | False          -> "⊥"
-  | AP p           ->  pp_of_variable c.aps p
+  | AP p           ->  pp_of_value c.aps p
   | Not g          -> "\u{00ac}" ^ pp_of_fmla c g
   | Bin (g, op, h) -> "(" ^ pp_of_fmla c g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla c h ^ ")"
-  | Know (a, g)    -> "K_" ^ pp_of_variable c.ags a ^ " " ^ pp_of_fmla c g ^ ""
+  | Know (a, g)    -> "K_" ^ pp_of_value c.ags a ^ " " ^ pp_of_fmla c g ^ ""

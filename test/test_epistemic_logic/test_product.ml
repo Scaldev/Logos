@@ -10,7 +10,7 @@ let ctx1 = {
 let e_bot = {
   eid = 0;
   pre  = True;
-  post = [ 0, False ; 0, False ]
+  post = [ 0, False ; 1, False ]
 }
 
 (* Send_ab success *)

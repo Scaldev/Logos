@@ -1,5 +1,10 @@
 open Epistemic_logic
 
+let pp_fmla fmt f =
+  Format.fprintf fmt "%s" (string_of_fmla f)
+
+let testable_fmla = Alcotest.testable (pp_fmla) (=)
+
 (*************************************************************************)
 (*                             string_of_fmla                            *)
 (*************************************************************************)
@@ -23,6 +28,69 @@ let tests_string_of_fmla = "string_of_fmla", [
   test_string_of_fmla_0;
   test_string_of_fmla_1;
   test_string_of_fmla_2;
+]
+
+(*************************************************************************)
+(*                             max_ap_in_fmla                            *)
+(*************************************************************************)
+
+let test_max_ap_in_fmla_0 () =
+  let expected = 42 in
+  let obtained = max_ap_in_fmla (AP 42) in
+  Alcotest.(check int) "" expected obtained
+
+let test_max_ap_in_fmla_1 () =
+  let expected = -1 in
+  let obtained = max_ap_in_fmla (Not (Bin (True, Or, False))) in
+  Alcotest.(check int) "" expected obtained
+
+let test_max_ap_in_fmla_2 () =
+  let expected = 20 in
+  let obtained = max_ap_in_fmla (Know (30, Bin(AP 20, And, Not (AP 10)))) in
+  Alcotest.(check int) "" expected obtained
+
+let tests_max_ap_in_fmla = "max_ap_in_fmla", [
+  test_max_ap_in_fmla_0;
+  test_max_ap_in_fmla_1;
+  test_max_ap_in_fmla_2
+]
+
+(*************************************************************************)
+(*                             max_ag_in_fmla                            *)
+(*************************************************************************)
+
+let test_max_ag_in_fmla_0 () =
+  let expected = -1 in
+  let obtained = max_ag_in_fmla (Not (Bin (True, Or, False))) in
+  Alcotest.(check int) "" expected obtained
+
+let test_max_ag_in_fmla_1 () =
+  let expected = 30 in
+  let obtained = max_ag_in_fmla (Know (30, Bin(AP 20, And, Not (AP 10)))) in
+  Alcotest.(check int) "" expected obtained
+
+let tests_max_ag_in_fmla = "max_ag_in_fmla", [
+  test_max_ag_in_fmla_0;
+  test_max_ag_in_fmla_1;
+]
+
+(*************************************************************************)
+(*                               reduce_fmla                             *)
+(*************************************************************************)
+
+let test_reduce_fmla_0 () =
+  let expected = (Not (Bin (True, Or, False))) in
+  let obtained = reduce_fmla (Not (Bin (True, Or, False))) in
+  Alcotest.(check testable_fmla) "" expected obtained
+
+let test_reduce_fmla_1 () =
+  let expected = Know (0, Bin(AP 1, And, Not (AP 0))) in
+  let obtained = reduce_fmla (Know (30, Bin(AP 20, And, Not (AP 10)))) in
+  Alcotest.(check testable_fmla) "" expected obtained
+
+let tests_reduce_fmla = "reduce_fmla", [
+  test_reduce_fmla_0;
+  test_reduce_fmla_1;
 ]
 
 (*************************************************************************)
@@ -75,20 +143,27 @@ let test_pp_of_fmla_0 () =
   Alcotest.(check string) "" expected obtained
 
 let test_pp_of_fmla_1 () =
+  let f = Know (-1, AP 1) in
+  let c = { aps = [|"p"|] ; ags = [|"a"|] } in
+  let expected = "K_-1 1" in
+  let obtained = pp_of_fmla c f in
+  Alcotest.(check string) "" expected obtained
+
+let test_pp_of_fmla_2 () =
   let f = Not(Bin(True, Or, False)) in
   let c = { aps = [||] ; ags = [||] } in
   let expected = "¬(⊤ ∨ ⊥)" in
   let obtained = pp_of_fmla c f in
   Alcotest.(check string) "" expected obtained
 
-let test_pp_of_fmla_2 () =
+let test_pp_of_fmla_3 () =
   let f = Bin (Bin (AP 0, Imp, AP 1), And, Bin (AP 2, Eq, AP 3)) in
   let c = { aps = [|"p" ; "q" ; "r" ; "s"|] ; ags = [||] } in
   let expected = "((p → q) ∧ (r ↔ s))" in
   let obtained = pp_of_fmla c f in
   Alcotest.(check string) "" expected obtained
   
-let test_pp_of_fmla_3 () =
+let test_pp_of_fmla_4 () =
   let f = Bin (Not (AP 0), Or, Know (0, Know (1, AP 1))) in
   let c = { aps = [|"p" ; "q"|] ; ags = [|"a" ; "b"|] } in
   let expected = "(¬p ∨ K_a K_b q)" in
@@ -100,12 +175,16 @@ let tests_pp_of_fmla = "pp_of_fmla", [
   test_pp_of_fmla_1;
   test_pp_of_fmla_2;
   test_pp_of_fmla_3;
+  test_pp_of_fmla_4;
 ]
 
 (*************************************************************************)
 
 let tests = [
   tests_string_of_fmla;
+  tests_max_ap_in_fmla;
+  tests_max_ag_in_fmla;
+  tests_reduce_fmla;
   tests_pp_of_fmla;
   tests_modal_depth_of_fmla;
   tests_size_of_fmla;

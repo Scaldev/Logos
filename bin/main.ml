@@ -1,3 +1,3 @@
 let () = print_endline "Hello, World!";;
 
-Demo_consecutive_numbers.exec ()
+Demo_two_generals.exec ()

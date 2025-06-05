@@ -37,7 +37,7 @@ let valuation_of_world (w: world) : int list =
 
 let size_of_world (w: world) : int =
   Array.fold_right ((+) << fun b -> if b then 1 else 0) w.valuation 0
-  
+
 (*****************************************************************************)
 (*                               Kripke model                                *)
 (*****************************************************************************)
