@@ -9,10 +9,15 @@ type binop = And | Or | Imp | Eq
 type fmla =
   | True
   | False
-  | AP of string
+  | AP of int
   | Not of fmla
   | Bin of fmla * binop * fmla
-  | Know of string * fmla
+  | Know of int * fmla
+
+type context = {
+  aps: string array;
+  ags: string array;
+}
 
 (*****************************************************************************)
 
@@ -30,39 +35,64 @@ let rec string_of_fmla (f: fmla) : string =
   match f with
   | True           -> "True"
   | False          -> "False"
-  | AP p           -> "AP \"" ^ p ^ "\""
+  | AP p           -> "AP " ^ string_of_int p ^ ""
   | Not g          -> "Not (" ^ string_of_fmla g ^ ")"
   | Bin (g, op, h) -> "Bin (" ^ string_of_fmla g ^ ", " ^ string_of_binop op ^ ", " ^ string_of_fmla h ^ ")"
-  | Know (a, g)    -> "Know (\"" ^ a ^ "\", " ^ string_of_fmla g ^ ")"
+  | Know (a, g)    -> "Know (" ^ string_of_int a ^ ", " ^ string_of_fmla g ^ ")"
 
 (*****************************************************************************)
 
-let aps_of_fmla (f: fmla) : string list =
-  let rec aux (f: fmla) : StringSet.t =
-    match f with
-    | Not (g)       -> aux g
-    | Bin (g, _, h) -> StringSet.union (aux g) (aux h)
-    | Know (_, g)   -> aux g
-    | AP p          -> StringSet.singleton p
-    | _             -> StringSet.empty
-  in
-  aux f
-  |> StringSet.to_list
-  |> List.sort String.compare
+let rec max_ap_in_fmla (f: fmla) : int =
+  match f with
+  | AP p          -> p
+  | Not (g)       -> max_ap_in_fmla g
+  | Bin (g, _, h) -> max (max_ap_in_fmla g) (max_ap_in_fmla h)
+  | Know (_, g)   -> max_ap_in_fmla g
+  | _             -> 0
 
 (*****************************************************************************)
 
-let ags_of_fmla (f: fmla) : string list =
-  let rec aux (f: fmla) : StringSet.t =
+let rec max_ag_in_fmla (f: fmla) : int =
+  match f with
+  | Not (g)       -> max_ag_in_fmla g
+  | Bin (g, _, h) -> max (max_ag_in_fmla g) (max_ag_in_fmla h)
+  | Know (a, g)   -> max a (max_ag_in_fmla g)
+  | _             -> 0
+
+(*****************************************************************************)
+
+let rec map_fmla (aps: int array) (ags: int array) (f: fmla) : fmla =
+  match f with
+  | True           -> True
+  | False          -> False
+  | AP p           -> AP aps.(p)
+  | Not (g)        -> Not (map_fmla aps ags g)
+  | Bin (g, op, h) -> Bin (map_fmla aps ags g, op, map_fmla aps ags h)
+  | Know (a, g)    -> Know (ags.(a), map_fmla aps ags g)
+
+let count_trues (arr: bool array) : int array =
+  let arr_aps = Array.make (Array.length arr) 0 in
+  let c = ref 0 in
+  Array.iteri (fun i b -> if b then c := !c + 1; arr_aps.(i) <- !c) arr;
+  arr_aps
+
+
+let reduce_fmla (f: fmla) : fmla =
+
+  let arr_aps = Array.make (max_ap_in_fmla f) false in
+  let arr_ags = Array.make (max_ag_in_fmla f) false in
+
+  let rec aux (f: fmla) : unit =
     match f with
     | Not (g)       -> aux g
-    | Bin (g, _, h) -> StringSet.union (aux g) (aux h)
-    | Know (a, g)   -> StringSet.add a (aux g)
-    | _             -> StringSet.empty
-  in
-  aux f
-  |> StringSet.to_list
-  |> List.sort String.compare
+    | Bin (g, _, h) -> max (aux g) (aux h)
+    | Know (a, g)   -> arr_ags.(a) <- true; aux g
+    | AP p          -> arr_aps.(p) <- true;
+    | _             -> ()
+  in aux f;
+  map_fmla (count_trues arr_ags) (count_trues arr_aps) f
+
+
   
 (*****************************************************************************)
 
@@ -94,11 +124,14 @@ let pp_of_binop (op: binop) : string =
   | Imp -> "\u{2192}"
   | Eq  -> "\u{2194}"
 
-let rec pp_of_fmla (f: fmla) : string =
+let pp_of_variable (vars: string array) (p: int) : string =
+  if p < 0 || p >= Array.length vars then string_of_int p else vars.(p)
+
+let rec pp_of_fmla (c: context) (f: fmla) : string =
   match f with
   | True           -> "⊤"
   | False          -> "⊥"
-  | AP p           -> p
-  | Not g          -> "\u{00ac}" ^ pp_of_fmla g
-  | Bin (g, op, h) -> "(" ^ pp_of_fmla g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla h ^ ")"
-  | Know (a, g)    -> "K_" ^ a ^ " " ^ pp_of_fmla g ^ ""
+  | AP p           ->  pp_of_variable c.aps p
+  | Not g          -> "\u{00ac}" ^ pp_of_fmla c g
+  | Bin (g, op, h) -> "(" ^ pp_of_fmla c g ^ " " ^ pp_of_binop op ^ " " ^ pp_of_fmla c h ^ ")"
+  | Know (a, g)    -> "K_" ^ pp_of_variable c.ags a ^ " " ^ pp_of_fmla c g ^ ""

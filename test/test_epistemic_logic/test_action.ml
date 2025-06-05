@@ -7,49 +7,70 @@ let pp_fmla fmt f =
 
 let testable_fmla = Alcotest.testable (pp_fmla) (=)
 
-(* Event model for the two generals problem *)
+let ctx1 = {
+  aps = [| "m_a" ; "m_b" ; "d" |];
+  ags = [| "a" ; "b" |]
+}
 
-(* Create send_ab action *)
+let e_bot = {
+  eid = 0;
+  pre  = True;
+  post = [ 0, False ; 0, False ]
+}
+
+(* Send_ab success *)
 
 let e1 = {
-  pre  = Bin (AP "m_a", And, AP "d");
-  post = [ "m_a", False ; "m_b", True ]
-}
-let e2 = {
-  pre  = True;
-  post = [ "m_a", False ; "m_b", False ]
+  eid = 1;
+  pre  = Bin (AP 0, And, AP 2);
+  post = [ 0, False ; 1, True ]
 }
 
-let r1a = [ e1, e1 ; e1, e2 ; e2, e1 ; e2, e2 ]
-let r1b = [ e1, e1 ; e2, e2 ]
+let r1a = [| [0;1] ; [0;1] |]
+let r1b = [| [0] ; [1] |]
 
 let em1 = {
-  events    = [ e1 ; e2 ];
-  relations = [ "a", r1a ; "b", r1b ]
+  events    = [| e_bot ; e1 |];
+  relations = [| r1a ; r1b |]
 }
 
-(* Create send_ba action *)
-
-let e3 = {
-  pre  = Bin (AP "m_b", And, AP "d");
-  post = [ "m_a", True ; "m_b", False ]
-}
-let e4 = {
-  pre  = True;
-  post = [ "m_a", False ; "m_b", False ]
+let send_ab = {
+  name  = "send_ab success";
+  model = em1;
+  aid   = 1
 }
 
-let r2a = [ e3, e3 ; e4, e4 ]
-let r2b = [ e3, e3 ; e3, e4 ; e4, e3 ; e4, e4 ]
+(* Send_ba success *)
+
+let e2 = {
+  eid = 1;
+  pre  = Bin (AP 0, And, AP 1);
+  post = [ 0, True ; 1, False ]
+}
+
+let r2a = [| [0] ; [1] |]
+let r2b = [| [0;1] ; [0;1] |]
 
 let em2 = {
-  events    = [ e3 ; e4 ];
-  relations = [ "a", r2a ; "b", r2b ]
+  events    = [| e_bot ; e2 |];
+  relations = [| r2a ; r2b |]
 }
+
+let send_ba = {
+  name  = "send_ba success";
+  model = em2;
+  aid   = 1
+}
+
 
 (* Other events *)
 
-let e5 = { pre  = AP "\xff"; post = [] }
+let e5 = { eid = 5; pre = AP 0; post = [] }
+
+let ctx2 = {
+  aps = [| "\xff" |];
+  ags = [| |]
+}
 
 (*****************************************************************************)
 (*                                    post                                   *)
@@ -57,14 +78,14 @@ let e5 = { pre  = AP "\xff"; post = [] }
 
 (* After event [e1], the atomic proposition [m_a] is set to [false]. *)
 let test_post_0 () =
-  let obtained = post e1 "m_a" in
+  let obtained = post e1 0 in
   let expected = False in
   Alcotest.(check testable_fmla) "" expected obtained
 
 (* After event [e1], the atomic proposition [m_a] isn't changed : [post(e)(p) = p]. *)
 let test_post_1 () =
-  let obtained = post e1 "d" in
-  let expected = AP "d" in
+  let obtained = post e1 2 in
+  let expected = AP 2 in
   Alcotest.(check testable_fmla) "" expected obtained
 
 let tests_post = "post", [
@@ -86,30 +107,13 @@ let tests_size_of_event = "size_of_event", [
 ]
 
 (*****************************************************************************)
-(*                                aps_of_events                              *)
-(*****************************************************************************)
-
-let test_aps_of_events_0 () =
-  let obtained = aps_of_events [] in
-  let expected = [] in
-  Alcotest.(check (list string)) "" expected obtained
-
-let test_aps_of_events_1 () =
-  let obtained = aps_of_events [e1 ; e2] in
-  let expected = ["d" ; "m_a" ; "m_b"] in
-  Alcotest.(check (list string)) "" expected obtained
-
-let tests_aps_of_events = "aps_of_events", [
-  test_aps_of_events_0;
-  test_aps_of_events_1;
-]
-
-(*****************************************************************************)
 (*                                pp_of_event                                *)
 (*****************************************************************************)
 
 let test_pp_of_event_0 () =
   let expected = "\
+  +----------------+\n\
+  | Event e_1      |\n\
   +----------------+\n\
   | pre: (m_a ∧ d) |\n\
   +----------------+\n\
@@ -118,30 +122,34 @@ let test_pp_of_event_0 () =
   |   m_b := ⊤     |\n\
   +----------------+\n"
   in
-  let obtained = pp_of_event e1 in
+  let obtained = pp_of_event ctx1 e1 in
   Alcotest.(check string) "" expected obtained
 
 let test_pp_of_event_1 () =
   let expected = "\
-  +------------+\n\
-  | pre: ⊤     |\n\
-  +------------+\n\
-  | post:      |\n\
-  |   m_a := ⊥ |\n\
-  |   m_b := ⊥ |\n\
-  +------------+\n"
+    +------------+\n\
+    | Event e_0  |\n\
+    +------------+\n\
+    | pre: ⊤     |\n\
+    +------------+\n\
+    | post:      |\n\
+    |   m_a := ⊥ |\n\
+    |   m_a := ⊥ |\n\
+    +------------+\n"
   in
-  let obtained = pp_of_event e2 in
+  let obtained = pp_of_event ctx1 e_bot in
   Alcotest.(check string) "" expected obtained
 
 let test_pp_of_event_2 () =
   let expected = "\
-  +--------+\n\
-  | pre: \255 |\n\
-  +--------+\n\
-  | post:  |\n\
-  +--------+\n" in
-  let obtained = pp_of_event e5 in
+  +-----------+\n\
+  | Event e_5 |\n\
+  +-----------+\n\
+  | pre: \255    |\n\
+  +-----------+\n\
+  | post:     |\n\
+  +-----------+\n" in
+  let obtained = pp_of_event ctx2 e5 in
   Alcotest.(check string) "" expected obtained
 
     
@@ -171,13 +179,32 @@ let tests_size_of_event_model = "size_of_event_model", [
 ]
 
 (*****************************************************************************)
+(*                                size_of_action                             *)
+(*****************************************************************************)
+
+let test_size_of_action_0 () =
+  let obtained = size_of_action send_ab in
+  let expected = 16 in (* 2 + (2+4) + (5+3) *)
+  Alcotest.(check int) "" expected obtained
+
+let test_size_of_action_1 () =
+  let obtained = size_of_action send_ba in
+  let expected = 16 in (* 2 + (2+4) + (5+3) *)
+  Alcotest.(check int) "" expected obtained
+
+let tests_size_of_action = "size_of_action", [
+  test_size_of_action_0;
+  test_size_of_action_1;
+]
+
+(*****************************************************************************)
 
 let tests = [
   tests_post;
   tests_size_of_event;
-  tests_aps_of_events;
   tests_pp_of_event;
   tests_size_of_event_model;
+  tests_size_of_action;
 ]
 
 let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list) =

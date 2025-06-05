@@ -1,95 +1,102 @@
 open Epistemic_logic
 
-(* Add state equality *)
-
-let pp_state fmt f =
-  Format.fprintf fmt "%s" (pp_of_state f)
-
-let testable_state = Alcotest.testable (pp_state) (=)
-
 (* Two generals problem *)
 
-(* Create send_ab action *)
+let ctx1 = {
+  aps = [| "m_a" ; "m_b" ; "d" |];
+  ags = [| "a" ; "b" |]
+}
+
+let e_bot = {
+  eid = 0;
+  pre  = True;
+  post = [ 0, False ; 0, False ]
+}
+
+(* Send_ab success *)
 
 let e1 = {
-  pre  = Bin (AP "m_a", And, AP "d");
-  post = [ "m_a", False ; "m_b", True ]
-}
-let e2 = {
-  pre  = True;
-  post = [ "m_a", False ; "m_b", False ]
+  eid = 1;
+  pre  = Bin (AP 0, And, AP 2);
+  post = [ 0, False ; 1, True ]
 }
 
-let r1a = [ e1, e1 ; e1, e2 ; e2, e1 ; e2, e2 ]
-let r1b = [ e1, e1 ; e2, e2 ]
+let r1a = [| [0;1] ; [0;1] |]
+let r1b = [| [0] ; [1] |]
 
 let em1 = {
-  events    = [ e1 ; e2 ];
-  relations = [ "a", r1a ; "b", r1b ]
+  events    = [| e_bot ; e1 |];
+  relations = [| r1a ; r1b |]
 }
 
 let send_ab = {
-  name   = "send_ab success";
-  model  = em1;
-  actual = e1
+  name  = "send_ab success";
+  model = em1;
+  aid   = 1
 }
 
-(* Create send_ba action *)
+(* Send_ba success *)
 
-let e3 = {
-  pre  = Bin (AP "m_b", And, AP "d");
-  post = [ "m_a", True ; "m_b", False ]
-}
-let e4 = {
-  pre  = True;
-  post = [ "m_a", False ; "m_b", False ]
+let e2 = {
+  eid = 1;
+  pre  = Bin (AP 1, And, AP 2);
+  post = [ 0, True ; 1, False ]
 }
 
-let r2a = [ e3, e3 ; e4, e4 ]
-let r2b = [ e3, e3 ; e3, e4 ; e4, e3 ; e4, e4 ]
+let r2a = [| [0] ; [1] |]
+let r2b = [| [0;1] ; [0;1] |]
 
 let em2 = {
-  events    = [ e3 ; e4 ];
-  relations = [ "a", r2a ; "b", r2b ]
+  events    = [| e_bot ; e2 |];
+  relations = [| r2a ; r2b |]
 }
 
 let send_ba = {
-  name   = "send_ba success";
-  model  = em2;
-  actual = e3
+  name  = "send_ba success";
+  model = em2;
+  aid   = 1
 }
-
 
 (* State 0 *)
 
-let w01 = { valuation = ["d" ; "m_a"]; history = []; }
-let w02 = { valuation = ["m_a"]; history = []; }
+let w00 = {
+  wid = 0; valuation = [| true ; false ; true |]; history = [];
+}
+let w01 = {
+  wid = 1; valuation = [| true ; false ; false |]; history = [];
+}
 
-let ra1 = "a", [ w01, w01 ; w02, w02 ]
-let rb1 = "b", [ w01, w01 ; w01, w02 ; w02, w01 ; w02, w02 ]
+let r0a = [| [0] ; [1] |]
+let r0b = [| [0;1] ; [0;1] |]
+
+let km0 = {
+  domain = [|w00 ; w01|];
+  relations = [|r0a ; r0b|]
+}
+
+let s0 = km0, 0
+
+(* State 1 *)
+
+let w10 = {
+  wid = 0; valuation = [| false ; false ; true |]; history = [ (0, e_bot) ];
+}
+let w11 = {
+  wid = 1; valuation = [| false ; true ; true |]; history = [ (0, e1) ];
+}
+let w12 = {
+  wid = 2; valuation = [| false ; false ; false |]; history = [ (1, e_bot) ];
+}
+
+let r2a' = [| [0;1] ; [0;1] ; [2] |]
+let r2b' = [| [0;2] ; [1] ; [0;2] |]
 
 let km1 = {
-  domain = [w01 ; w02];
-  relations = [ra1 ; rb1]
+  domain = [|w10 ; w11 ; w12|];
+  relations = [|r2a' ; r2b'|]
 }
 
-let s1 = km1, w01
-
-(* State 1 = State 1 after send_ab *)
-
-let w11 = { valuation = ["d" ; "m_b"]; history = [ w01, e1 ]; }
-let w12 = { valuation = ["d"]; history = [ w01, e2 ]; }
-let w13 = { valuation = []; history = [ w02, e2 ]; }
-
-let ra2 = "a", [ w11, w11 ; w11, w12 ; w12, w11 ; w12, w12 ; w13, w13 ]
-let rb2 = "b", [ w11, w11 ; w12, w12 ; w12, w13 ; w13, w12 ; w13, w13 ]
-
-let km2 = {
-  domain = [w11 ; w12 ; w13];
-  relations = [ra2 ; rb2]
-}
-
-let s2 = km2, w11
+let s1 = km1, 1
 
 (*****************************************************************************)
 (*                                is_applicable                              *)
@@ -97,13 +104,13 @@ let s2 = km2, w11
 
 (* The messager is with general [a] and the event is [send_ab] *)
 let test_is_applicable_0 () =
-  let obtained = is_applicable s1 send_ab in
+  let obtained = is_applicable s0 send_ab in
   let expected = true in
   Alcotest.(check bool) "" expected obtained
 
 (* The messager is with general [a] and the event is [send_ba] *)
 let test_is_applicable_1 () =
-  let obtained = is_applicable s1 send_ba in
+  let obtained = is_applicable s0 send_ba in
   let expected = false in
   Alcotest.(check bool) "" expected obtained
 
@@ -118,9 +125,9 @@ let tests_is_applicable = "is_applicable", [
 
 (* The messager is with general [a] and the event is [send_ab] *)
 let test_product_update_0 () =
-  let obtained = s1 @ send_ab in
-  let expected = s2 in
-  Alcotest.(check testable_state) "" expected obtained
+  let obtained = s0 @ send_ab in
+  let expected = s1 in
+  Alcotest.(check string) "" (pp_of_state ctx1 expected) (pp_of_state ctx1 obtained)
 
 let tests_product_update = "product_update", [
   test_product_update_0;

@@ -1,1 +1,1 @@
-include module type of Product
+include module type of Solver

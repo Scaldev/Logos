@@ -1,33 +1,38 @@
 open Epistemic_logic
 
+let ctx1 = {
+  aps = [| "m_a" ; "m_b" ; "d" |];
+  ags = [| "a" ; "b" |]
+}
+
 let w1 = {
-  valuation = ["d" ; "m_a"]; history = [];
+  wid = 0; valuation = [| true ; false ; true |]; history = [];
 }
 let w2 = {
-  valuation = ["m_a"]; history = [];
+  wid = 1; valuation = [| true ; false ; false |]; history = [];
 }
 
-let r_a = "a", [ w1, w1 ; w2, w2 ]
-let r_b = "b", [ w1, w1 ; w1, w2 ; w2, w1 ; w2, w2 ]
+let r_a = [| [0] ; [1] |]
+let r_b = [| [0;1] ; [0;1] |]
 
-let r_b' = "b", [ w1, w1 ; w1, w2 ; w2, w2 ]
+let r_b' = [| [0;1] ; [1] |]
 
 let km1 = {
-  domain = [w1 ; w2];
-  relations = [r_a ; r_b]
+  domain = [|w1 ; w2|];
+  relations = [|r_a ; r_b|]
 }
 
-let s1 = km1, w1
-let s2 = km1, w2
+let s1 = km1, 0
+let s2 = km1, 1
 
 let km2 = {
-  domain = [w1 ; w2];
-  relations = [r_a ; r_b']
+  domain = [|w1 ; w2|];
+  relations = [|r_a ; r_b'|]
 }
 
 let km3 = {
-  domain = [];
-  relations = [];
+  domain = [| |];
+  relations = [||];
 }
 
 (*************************************************************************)
@@ -74,22 +79,22 @@ let test_pp_of_kripke_model_0 () =
     | relations: |\n\
     +------------+\n"
   in
-  let obtained = pp_of_kripke_model km3 in
+  let obtained = pp_of_kripke_model ctx1 km3 in
   Alcotest.(check string) "" expected obtained
 
 let test_pp_of_kripke_model_1 () =
   let expected = "\
-    +------------------------------------------------------------+\n\
-    | worlds:                                                    |\n\
-    |   w_1 : d, m_a                                             |\n\
-    |   w_2 : m_a                                                |\n\
-    +------------------------------------------------------------+\n\
-    | relations:                                                 |\n\
-    |   →_a = { (w_1, w_1), (w_2, w_2) }                         |\n\
-    |   →_b = { (w_1, w_1), (w_1, w_2), (w_2, w_1), (w_2, w_2) } |\n\
-    +------------------------------------------------------------+\n"
+  +----------------------------+\n\
+  | worlds:                    |\n\
+  |   w^0_0 : m_a, d [ ]       |\n\
+  |   w^0_1 : m_a [ ]          |\n\
+  +----------------------------+\n\
+  | relations:                 |\n\
+  |   →_a = {  }               |\n\
+  |   →_b = { (w^0_0, w^0_1) } |\n\
+  +----------------------------+\n"
   in
-  let obtained = pp_of_kripke_model km1 in
+  let obtained = pp_of_kripke_model ctx1 km1 in
   Alcotest.(check string) "" expected obtained
 
 let tests_pp_of_kripke_model = "pp_of_kripke_model", [
@@ -103,27 +108,27 @@ let tests_pp_of_kripke_model = "pp_of_kripke_model", [
 
 let test_pp_of_state_0 () =
   let expected = "\
-    State with actual world w_1:\n\
-    +------------------------------------------------------------+\n\
-    | worlds:                                                    |\n\
-    |   w_1 : d, m_a                                             |\n\
-    |   w_2 : m_a                                                |\n\
-    +------------------------------------------------------------+\n\
-    | relations:                                                 |\n\
-    |   →_a = { (w_1, w_1), (w_2, w_2) }                         |\n\
-    |   →_b = { (w_1, w_1), (w_1, w_2), (w_2, w_1), (w_2, w_2) } |\n\
-    +------------------------------------------------------------+\n"
+  +-----------------------------+\n\
+  | State (actual world w^0_0): |\n\
+  +-----------------------------+\n\
+  | worlds:                     |\n\
+  |   w^0_0 : m_a, d [ ]        |\n\
+  |   w^0_1 : m_a [ ]           |\n\
+  +-----------------------------+\n\
+  | relations:                  |\n\
+  |   →_a = {  }                |\n\
+  |   →_b = { (w^0_0, w^0_1) }  |\n\
+  +-----------------------------+\n"
   in
-  let obtained = pp_of_state s1 in
+  let obtained = pp_of_state ctx1 s1 in
   Alcotest.(check string) "" expected obtained
 
 let test_pp_of_state_1 () =
-  let w0 = {valuation=[]; history=[]} in
   try
-    let _ = pp_of_state (km1, w0) in
+    let _ = pp_of_state ctx1 (km1, 99) in
     Alcotest.fail "Aucune exception levée"
   with
-  | UnknownActualWorld _ -> ()
+  | UnknownWorld _ -> ()
   | _ -> Alcotest.fail "Mauvaise exception levée"
 
 let tests_pp_of_state = "pp_of_state", [
@@ -137,22 +142,22 @@ let tests_pp_of_state = "pp_of_state", [
 
 let test_eval_0 () =
   let expected = true in
-  let obtained = s1 |= (Bin (AP "d", And, AP "m_a")) in
+  let obtained = s1 |= (Bin (AP 0, And, AP 0)) in
   Alcotest.(check bool) "" expected obtained
 
 let test_eval_1 () =
   let expected = true in
-  let obtained = s2 |= (Bin (Not (AP "d"), And, AP "m_a")) in
+  let obtained = s2 |= (Bin (Not (AP 2), And, AP 0)) in
   Alcotest.(check bool) "" expected obtained
 
 let test_eval_2 () =
   let expected = true in
-  let obtained = s2 |= (Bin (True, Or, AP "m_b")) in
+  let obtained = s2 |= (Bin (True, Or, AP 1)) in
   Alcotest.(check bool) "" expected obtained
 
 let test_eval_3 () =
   let expected = true in
-  let obtained = s2 |= (Bin (False, Eq, Bin (True, Imp, AP "m_b"))) in
+  let obtained = s2 |= (Bin (False, Eq, Bin (True, Imp, AP 1))) in
   Alcotest.(check bool) "" expected obtained
 
 let test_eval_4 () =
@@ -173,12 +178,12 @@ let test_eval_4 () =
 
 let test_eval_5 () =
   let expected = true in
-  let obtained = s1 |= Know ("a", AP "d") in
+  let obtained = s1 |= Know (0, AP 2) in
   Alcotest.(check bool) "" expected obtained
 
 let test_eval_6 () =
   let expected = false in
-  let obtained = s1 |= Know ("b", AP "d") in
+  let obtained = s1 |= Know (1, AP 2) in
   Alcotest.(check bool) "" expected obtained
 
 (*
@@ -187,10 +192,10 @@ let test_eval_6 () =
 *)
 let test_eval_7 () =
   try
-    let _ = s1 |= Know ("z", AP "d") in
+    let _ = s1 |= Know (3, AP 0) in
     Alcotest.fail "Aucune exception levée"
   with
-  | UnknownAgent "z" -> ()
+  | UnknownAgent 3 -> ()
   | _ -> Alcotest.fail "Mauvaise exception levée"
     
 let tests_eval = "test_eval", [

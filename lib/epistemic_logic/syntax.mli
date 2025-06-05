@@ -1,22 +1,44 @@
 type binop = And | Or | Imp | Eq
 
+(**
+  [fmla] describes an epistemic formula. Atomic proposition integers and
+  agent integers should be >= 0.
+*)
 type fmla =
     True
   | False
-  | AP of string
+  | AP of int
   | Not of fmla
   | Bin of fmla * binop * fmla
-  | Know of string * fmla
+  | Know of int * fmla
 
 (**
-  [aps_of_fmla f] returns the atomic propositions in [f].
+  [context] gives a better string representation for atomic propositions
+  and agents.
 *)
-val aps_of_fmla : fmla -> string list
+type context = {
+  aps: string array;
+  ags: string array;
+}
+
+(*****************************************************************************)
 
 (**
-  [ags_of_fmla f] returns the agents in [f].
+  [max_ap_in_fmla f] returns the greatest atomic proposition integer in [f].
 *)
-val ags_of_fmla : fmla -> string list
+val max_ap_in_fmla : fmla -> int
+
+(**
+  [max_ag_in_fmla f] returns the greatest agent integer in [f].
+*)
+val max_ag_in_fmla : fmla -> int
+
+(**
+  [reduce_fmla f] returns the formula [f] whose atomic propositions
+  are between 1 and max_ap_in_fmla f, and whose agents are between 1
+  and max_ag_in_fmla f.
+*)
+val reduce_fmla : fmla -> fmla
 
 (**
   [string_of_fmla f] returns the string representation of [f].
@@ -35,13 +57,7 @@ val modal_depth_of_fmla : fmla -> int
 val size_of_fmla : fmla -> int
 
 (**
-  Preconditions:
-    - [max_ap_in_fmla f = Array.length aps - 1]
-    - [max_ag_in_fmla f = Array.length ags - 1]
-
-  [pp_of_fmla aps ags f] returns a pretty representation of [f],
-  using [aps] and [ags] to stringify atomic propositions and agents
-  indexes.
-
+  [pp_of_fmla c f] returns the pretty-print of [f] given the
+  context [c].
 *)
-val pp_of_fmla : fmla -> string
+val pp_of_fmla : context -> fmla -> string
