@@ -21,7 +21,21 @@ type context = {
   ags: string array;
 }
 
-(*****************************************************************************)
+
+(**
+  [string_of_fmla f] returns the string representation of [f].
+*)
+val string_of_fmla : fmla -> string
+
+(**
+  [size_of_fmla f] returns the size of the formula [f].
+*)
+val size_of_fmla : fmla -> int
+
+(**
+  [modal_depth f] returns the modal depth of the formula [f].
+*)
+val modal_depth_of_fmla : fmla -> int
 
 (**
   [max_ap_in_fmla f] returns the greatest atomic proposition integer in [f].
@@ -39,21 +53,6 @@ val max_ag_in_fmla : fmla -> int
   and [max_ag_in_fmla f].
 *)
 val reduce_fmla : fmla -> fmla
-
-(**
-  [string_of_fmla f] returns the string representation of [f].
-*)
-val string_of_fmla : fmla -> string
-
-(**
-  [modal_depth f] returns the modal depth of the formula [f].
-*)
-val modal_depth_of_fmla : fmla -> int
-
-(**
-  [size_of_fmla f] returns the size of the formula [f].
-*)
-val size_of_fmla : fmla -> int
 
 (**
   [pp_of_fmla c f] returns the pretty-print of [f] given the context [c].

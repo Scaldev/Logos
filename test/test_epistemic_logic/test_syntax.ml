@@ -31,6 +31,44 @@ let tests_string_of_fmla = "string_of_fmla", [
 ]
 
 (*************************************************************************)
+(*                             size_of_fmla                              *)
+(*************************************************************************)
+
+let test_size_of_fmla_0 () =
+  let expected = 1 in
+  let obtained = size_of_fmla (AP 0) in
+  Alcotest.(check int) "" expected obtained
+
+let test_size_of_fmla_1 () =
+  let expected = 5 in
+  let obtained = size_of_fmla (Know (0, Bin(AP 0, And, Not (AP 1)))) in
+  Alcotest.(check int) "" expected obtained
+
+let tests_size_of_fmla = "size_of_fmla", [
+  test_size_of_fmla_0;
+  test_size_of_fmla_1;
+]
+
+(*************************************************************************)
+(*                          modal_depth_of_fmla                          *)
+(*************************************************************************)
+
+let test_modal_depth_of_fmla_0 () =
+  let expected = 0 in
+  let obtained = modal_depth_of_fmla (AP 0) in
+  Alcotest.(check int) "" expected obtained
+
+let test_modal_depth_of_fmla_1 () =
+  let expected = 1 in
+  let obtained = modal_depth_of_fmla (Know (0, Bin(AP 0, And, Not (AP 1)))) in
+  Alcotest.(check int) "" expected obtained
+
+let tests_modal_depth_of_fmla = "modal_depth_of_fmla", [
+  test_modal_depth_of_fmla_0;
+  test_modal_depth_of_fmla_1;
+]
+
+(*************************************************************************)
 (*                             max_ap_in_fmla                            *)
 (*************************************************************************)
 
@@ -94,44 +132,6 @@ let tests_reduce_fmla = "reduce_fmla", [
 ]
 
 (*************************************************************************)
-(*                          modal_depth_of_fmla                          *)
-(*************************************************************************)
-
-let test_modal_depth_of_fmla_0 () =
-  let expected = 0 in
-  let obtained = modal_depth_of_fmla (AP 0) in
-  Alcotest.(check int) "" expected obtained
-
-let test_modal_depth_of_fmla_1 () =
-  let expected = 1 in
-  let obtained = modal_depth_of_fmla (Know (0, Bin(AP 0, And, Not (AP 1)))) in
-  Alcotest.(check int) "" expected obtained
-
-let tests_modal_depth_of_fmla = "modal_depth_of_fmla", [
-  test_modal_depth_of_fmla_0;
-  test_modal_depth_of_fmla_1;
-]
-
-(*************************************************************************)
-(*                             size_of_fmla                              *)
-(*************************************************************************)
-
-let test_size_of_fmla_0 () =
-  let expected = 1 in
-  let obtained = size_of_fmla (AP 0) in
-  Alcotest.(check int) "" expected obtained
-
-let test_size_of_fmla_1 () =
-  let expected = 5 in
-  let obtained = size_of_fmla (Know (0, Bin(AP 0, And, Not (AP 1)))) in
-  Alcotest.(check int) "" expected obtained
-
-let tests_size_of_fmla = "size_of_fmla", [
-  test_size_of_fmla_0;
-  test_size_of_fmla_1;
-]
-
-(*************************************************************************)
 (*                                pp_of_fmla                             *)
 (*************************************************************************)
 
@@ -179,15 +179,17 @@ let tests_pp_of_fmla = "pp_of_fmla", [
 ]
 
 (*************************************************************************)
+(*************************************************************************)
+(*************************************************************************)
 
 let tests = [
   tests_string_of_fmla;
+  tests_size_of_fmla;
+  tests_modal_depth_of_fmla;
   tests_max_ap_in_fmla;
   tests_max_ag_in_fmla;
   tests_reduce_fmla;
   tests_pp_of_fmla;
-  tests_modal_depth_of_fmla;
-  tests_size_of_fmla;
 ]
 
 let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list) =

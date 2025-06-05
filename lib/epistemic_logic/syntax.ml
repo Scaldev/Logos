@@ -19,8 +19,6 @@ type context = {
   ags: string array;
 }
 
-(*****************************************************************************)
-
 (**
   [string_of_binop op] returns the string representation of [op].
 *)
@@ -40,7 +38,24 @@ let rec string_of_fmla (f: fmla) : string =
   | Bin (g, op, h) -> "Bin (" ^ string_of_fmla g ^ ", " ^ string_of_binop op ^ ", " ^ string_of_fmla h ^ ")"
   | Know (a, g)    -> "Know (" ^ string_of_int a ^ ", " ^ string_of_fmla g ^ ")"
 
+
 (*****************************************************************************)
+(*                           Formula properties                              *)
+(*****************************************************************************)
+
+let rec size_of_fmla (f: fmla) : int =
+  match f with
+  | Not(g)        -> 1 + size_of_fmla g
+  | Bin (g, _, h) -> 1 + size_of_fmla g + size_of_fmla h
+  | Know(_, g)    -> 1 + size_of_fmla g
+  | _             -> 1
+
+let rec modal_depth_of_fmla (f: fmla) : int =
+  match f with
+  | Not (g)       -> modal_depth_of_fmla g
+  | Bin (g, _, h) -> max (modal_depth_of_fmla g) (modal_depth_of_fmla h)
+  | Know (_, g)   -> 1 + modal_depth_of_fmla g
+  | _             -> 0
 
 let rec max_ap_in_fmla (f: fmla) : int =
   match f with
@@ -50,8 +65,6 @@ let rec max_ap_in_fmla (f: fmla) : int =
   | Know (_, g)   -> max_ap_in_fmla g
   | _             -> -1
 
-(*****************************************************************************)
-
 let rec max_ag_in_fmla (f: fmla) : int =
   match f with
   | Not (g)       -> max_ag_in_fmla g
@@ -59,6 +72,8 @@ let rec max_ag_in_fmla (f: fmla) : int =
   | Know (a, g)   -> max a (max_ag_in_fmla g)
   | _             -> -1
 
+(*****************************************************************************)
+(*                              Reduce formula                               *)
 (*****************************************************************************)
 
 (**
@@ -99,26 +114,8 @@ let reduce_fmla (f: fmla) : fmla =
   in aux f;
   map_fmla (count_trues arr_aps) (count_trues arr_ags) f
 
-
-  
 (*****************************************************************************)
-
-let rec modal_depth_of_fmla (f: fmla) : int =
-  match f with
-  | Not (g)       -> modal_depth_of_fmla g
-  | Bin (g, _, h) -> max (modal_depth_of_fmla g) (modal_depth_of_fmla h)
-  | Know (_, g)   -> 1 + modal_depth_of_fmla g
-  | _             -> 0
-
-(*****************************************************************************)
-
-let rec size_of_fmla (f: fmla) : int =
-  match f with
-  | Not(g)        -> 1 + size_of_fmla g
-  | Bin (g, _, h) -> 1 + size_of_fmla g + size_of_fmla h
-  | Know(_, g)    -> 1 + size_of_fmla g
-  | _             -> 1
-
+(*                           Pretty-print formula                            *)
 (*****************************************************************************)
 
 (**
