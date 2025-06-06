@@ -1,14 +1,6 @@
 open Epistemic_logic
 
-(* Two generals problem *)
-
-
-let aps = [| "m_a" ; "m_b" ; "d" |]
-let ags = [| "a" ; "b" |]
-
-let ctx = { aps = aps; ags = ags }
-
-(* Send_ab success *)
+(* Send_ab *)
 
 let e0 = {
   eid = 0;
@@ -31,12 +23,13 @@ let em1 = {
 }
 
 let send_ab = {
-  name  = "send_ab success";
+  name  = "send_ab";
   model = em1;
   aid   = 0
 }
 
-(* Send_ba success *)
+
+(* Send_ba *)
 
 let e0' = {
   eid = 0;
@@ -59,7 +52,7 @@ let em2 = {
 }
 
 let send_ba = {
-  name  = "send_ba success";
+  name  = "send_ba";
   model = em2;
   aid   = 0
 }
@@ -83,17 +76,32 @@ let km0 = {
 
 let s0 = km0, 0
 
-let n_max = 2_000
-let actions_many = Array.init n_max (fun (n: int) -> if n mod 2 == 0 then send_ab else send_ba)
+let goal = Bin (
+  Know (0, Know (1, AP 2)),
+  And,
+  Know (1, Know (0, AP 2))
+)
 
-let execute_actions (s0: state) (actions: action array) : unit =
-  let s' = ref s0 in
-  for i = 0 to Array.length actions_many - 1 do
-    print_string ("i = " ^ (string_of_int (i + 1)) ^ " :");
-    print_string (" action = \"" ^ actions.(i).name ^ "\"");
-    print_string (" (size = " ^ string_of_int (size_of_state !s') ^ ")\n");
-    flush stdout;
-    s' := !s' @ actions.(i);
-  done;;
+let ctx = {
+  aps = [| "m_a" ; "m_b" ; "d" |];
+  ags = [| "a" ; "b" |]
+}
 
-let exec () = execute_actions s0 actions_many
+let get_state () : state =
+  s0
+
+let rec know max_depth a =
+  match max_depth with
+  | 0 -> AP 2
+  | _ -> Know (a, know (max_depth-1) ((a+1) mod 2))
+
+let make_goal (max_depth: int) =
+  Bin(know max_depth 0, And, know max_depth 1)
+
+let instanciate (max_depth: int) : planning_task * context =
+    let t = {
+    init = s0 ;
+    actions = [ send_ab ; send_ba ] ;
+    goal = make_goal max_depth
+  } in
+  (t, ctx)

@@ -179,7 +179,7 @@ and eval (s: state) (f: fmla) : bool =
   | False           -> false
   | AP p            ->
     if p < 0 || p >= Array.length km.domain.(wi).valuation then raise (UnknownProp p)
-    else km.domain.(wi).valuation.(p)
+    else (km.domain.(wi).valuation.(p))
   | Not g           -> not (eval s g)
   | Bin (g, And, h) -> eval s g && eval s h
   | Bin (g, Or,  h) -> eval s g || eval s h

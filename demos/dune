@@ -1,6 +1,0 @@
-(include_subdirs qualified)
-
-(library
- (name demos)
- (wrapped false)
- (libraries logos))

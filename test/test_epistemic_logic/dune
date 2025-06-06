@@ -13,3 +13,7 @@
 (test
  (name test_product)
  (libraries logos alcotest))
+
+(test
+ (name test_solver)
+ (libraries logos alcotest))
