@@ -55,6 +55,12 @@ val max_ag_in_fmla : fmla -> int
 val reduce_fmla : fmla -> fmla
 
 (**
+  [pp_of_value vars p] returns a pretty-print of [p] according to [vars]
+  if possible, and [p] as a string if not.
+*)
+val pp_of_value : string array -> int -> string
+
+(**
   [pp_of_fmla c f] returns the pretty-print of [f] given the context [c].
 *)
 val pp_of_fmla : context -> fmla -> string

@@ -128,10 +128,6 @@ let pp_of_binop (op: binop) : string =
   | Imp -> "\u{2192}"
   | Eq  -> "\u{2194}"
 
-(**
-  [pp_of_value vars p] returns a pretty-print of [p] according to [vars]
-  if possible, and [p] as a string if not.
-*)
 let pp_of_value (vars: string array) (p: int) : string =
   if p < 0 || p >= Array.length vars then string_of_int p else vars.(p)
 

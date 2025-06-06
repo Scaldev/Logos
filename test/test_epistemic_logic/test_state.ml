@@ -1,5 +1,9 @@
 open Epistemic_logic
 
+(*****************************************************************************)
+(*                                    Set up                                 *)
+(*****************************************************************************)
+
 let ctx1 = {
   aps = [| "m_a" ; "m_b" ; "d" |];
   ags = [| "a" ; "b" |]
@@ -34,6 +38,19 @@ let km3 = {
   domain = [| |];
   relations = [||];
 }
+
+(*************************************************************************)
+(*                            max_ap_of_worlds                           *)
+(*************************************************************************)
+
+let test_max_ap_of_worlds_0 () =
+  let expected = 2 in
+  let obtained = max_ap_of_worlds [|w1 ; w2|] in
+  Alcotest.(check int) "" expected obtained
+  
+let tests_max_ap_of_worlds = "max_ap_of_worlds", [
+  test_max_ap_of_worlds_0;
+]
 
 (*************************************************************************)
 (*                          size_of_kripke_model                         *)
@@ -97,43 +114,38 @@ let test_pp_of_kripke_model_1 () =
   let obtained = pp_of_kripke_model ctx1 km1 in
   Alcotest.(check string) "" expected obtained
 
+let test_pp_of_kripke_model_2 () =
+  let expected = "\
+  +----------------------------+\n\
+  | worlds:                    |\n\
+  |   w^0_0 : 0, 2 [ ]         |\n\
+  |   w^0_1 : 0 [ ]            |\n\
+  +----------------------------+\n\
+  | relations:                 |\n\
+  |   →_0 = {  }               |\n\
+  |   →_1 = { (w^0_0, w^0_1) } |\n\
+  +----------------------------+\n"
+  in
+  let obtained = pp_of_kripke_model { aps=[||] ; ags=[||] } km1 in
+  Alcotest.(check string) "" expected obtained
+
 let tests_pp_of_kripke_model = "pp_of_kripke_model", [
   test_pp_of_kripke_model_0;
   test_pp_of_kripke_model_1;
+  test_pp_of_kripke_model_2;
 ]
 
 (*************************************************************************)
-(*                              pp_of_state                              *)
+(*                          tests_size_of_state                          *)
 (*************************************************************************)
 
-let test_pp_of_state_0 () =
-  let expected = "\
-  +-----------------------------+\n\
-  | State (actual world w^0_0): |\n\
-  +-----------------------------+\n\
-  | worlds:                     |\n\
-  |   w^0_0 : m_a, d [ ]        |\n\
-  |   w^0_1 : m_a [ ]           |\n\
-  +-----------------------------+\n\
-  | relations:                  |\n\
-  |   →_a = {  }                |\n\
-  |   →_b = { (w^0_0, w^0_1) }  |\n\
-  +-----------------------------+\n"
-  in
-  let obtained = pp_of_state ctx1 s1 in
-  Alcotest.(check string) "" expected obtained
-
-let test_pp_of_state_1 () =
-  try
-    let _ = pp_of_state ctx1 (km1, 99) in
-    Alcotest.fail "Aucune exception levée"
-  with
-  | UnknownWorld _ -> ()
-  | _ -> Alcotest.fail "Mauvaise exception levée"
-
-let tests_pp_of_state = "pp_of_state", [
-  test_pp_of_state_0;
-  test_pp_of_state_1;
+let test_size_of_state_0 () =
+  let expected = 11 in (* 2 + (2+4) + (2+1) *)
+  let obtained = size_of_state s1 in
+  Alcotest.(check int) "" expected obtained
+  
+let tests_size_of_state = "tests_size_of_state", [
+  test_size_of_state_0;
 ]
 
 (*************************************************************************)
@@ -186,18 +198,38 @@ let test_eval_6 () =
   let obtained = s1 |= Know (1, AP 2) in
   Alcotest.(check bool) "" expected obtained
 
-(*
-  Agent [z] has an empty epistemic relation;
-  that is
-*)
 let test_eval_7 () =
   try
-    let _ = s1 |= Know (3, AP 0) in
+    let _ = s1 |= AP (-1) in
     Alcotest.fail "Aucune exception levée"
   with
-  | UnknownAgent 3 -> ()
+  | UnknownProp -1 -> ()
   | _ -> Alcotest.fail "Mauvaise exception levée"
     
+let test_eval_8 () =
+  try
+    let _ = s1 |= AP 99 in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownProp 99 -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+
+let test_eval_9 () =
+  try
+    let _ = s1 |= Know (99, AP 0) in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownAgent 99 -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+    
+let test_eval_10 () =
+  try
+    let _ = s1 |= Know (-1, AP 0) in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownAgent -1 -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+
 let tests_eval = "test_eval", [
   test_eval_0;
   test_eval_1;
@@ -207,16 +239,64 @@ let tests_eval = "test_eval", [
   test_eval_5;
   test_eval_6;
   test_eval_7;
+  test_eval_8;
+  test_eval_9;
+  test_eval_10;
+]
+
+(*************************************************************************)
+(*                              pp_of_state                              *)
+(*************************************************************************)
+
+let test_pp_of_state_0 () =
+  let expected = "\
+  +-----------------------------+\n\
+  | State (actual world w^0_0): |\n\
+  +-----------------------------+\n\
+  | worlds:                     |\n\
+  |   w^0_0 : m_a, d [ ]        |\n\
+  |   w^0_1 : m_a [ ]           |\n\
+  +-----------------------------+\n\
+  | relations:                  |\n\
+  |   →_a = {  }                |\n\
+  |   →_b = { (w^0_0, w^0_1) }  |\n\
+  +-----------------------------+\n"
+  in
+  let obtained = pp_of_state ctx1 s1 in
+  Alcotest.(check string) "" expected obtained
+
+let test_pp_of_state_1 () =
+  try
+    let _ = pp_of_state ctx1 (km1, -1) in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownWorld _ -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+
+let test_pp_of_state_2 () =
+  try
+    let _ = pp_of_state ctx1 (km1, 99) in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnknownWorld _ -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
+
+let tests_pp_of_state = "pp_of_state", [
+  test_pp_of_state_0;
+  test_pp_of_state_1;
+  test_pp_of_state_2;
 ]
 
 (*************************************************************************)
 
 let tests = [
+  tests_max_ap_of_worlds;
   tests_size_of_kripke_model;
   tests_is_S5_model;
   tests_pp_of_kripke_model;
-  tests_pp_of_state;
+  tests_size_of_state;
   tests_eval;
+  tests_pp_of_state;
 ]
 
 let format_tests (tss: (string * (Alcotest.return -> Alcotest.return) list) list) =
