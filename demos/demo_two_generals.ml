@@ -83,14 +83,14 @@ let km0 = {
 
 let s0 = km0, 0
 
-let n_max = 500
+let n_max = 2_000
 let actions_many = Array.init n_max (fun (n: int) -> if n mod 2 == 0 then send_ab else send_ba)
 
 let execute_actions (s0: state) (actions: action array) : unit =
   let s' = ref s0 in
   for i = 0 to Array.length actions_many - 1 do
     print_string ("i = " ^ (string_of_int (i + 1)) ^ " :");
-    print_string (" action = \"" ^ actions.(i).name ^ "\" ");
+    print_string (" action = \"" ^ actions.(i).name ^ "\"");
     print_string (" (size = " ^ string_of_int (size_of_state !s') ^ ")\n");
     flush stdout;
     s' := !s' @ actions.(i);

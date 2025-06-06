@@ -129,8 +129,17 @@ let test_product_update_0 () =
   let expected = s1 in
   Alcotest.(check string) "" (pp_of_state ctx1 expected) (pp_of_state ctx1 obtained)
 
+  (* The messager is with general [a] and the event is [send_ab] *)
+let test_product_update_1 () =
+  try
+    let _ = s0  @ send_ba in
+    Alcotest.fail "Aucune exception levée"
+  with
+  | UnapplicableAction (0, 1) -> ()
+  | _ -> Alcotest.fail "Mauvaise exception levée"
 let tests_product_update = "product_update", [
   test_product_update_0;
+  test_product_update_1
 ]
 
 (*****************************************************************************)
