@@ -18,16 +18,16 @@ val post : event -> int -> fmla
 val size_of_event : event -> int
 
 (**
-  [max_ap_of_events es] returns the greatest atomic proposition integer mentionned
-  in this event.
+  [max_ap_of_events es] returns the greatest atomic proposition integer in an
+  event [e] of [es].
 *)
 val max_ap_of_events : event list -> int
 
 (**
   [pp_of_event c e] returns a pretty-print of an event [e] given [c].
   It's a table with one column and 2 rows. The first row contains the
-  precondition formula, and the second row contains the postconditions formulas,
-  one per line.
+  precondition formula, and the second row contains the postconditions
+  formulas, one per line.
 
   Example:
   {[
@@ -45,15 +45,20 @@ val pp_of_event : context -> event -> string
 (*****************************************************************************)
 
 (* 
-   [relations.(a).(i)] gives the list of event ids [i'] such that
-   [events.(i) ->_a events.(i')].
-   Thus, going through all relations of an event model that [O(n)] time,
-   where [n] is the number of [(e, e')] pairs such that [e ->_a e'].
+   [relation.(n)] gives the list of nodes [n'] such that
+   [relation.(n) ->_a relation.(n)].
 *)
 type relation = int list array
 
+(*
+  [size_of_relation r] returns the number of pairs [(n, m)] such that
+  [n ->_a m]n with [->_a] the described relation.
+*)
 val size_of_relation : relation -> int
 
+(*
+  [relations.(a)] gives the relation [->_a] for agent [a].
+*)
 type relations = relation array
 
 type event_model = {
@@ -66,8 +71,6 @@ type action = {
   model: event_model;
   aid: int
 }
-
-exception InvalidEventIndex of int
 
 (**
   [size_of_event_model em] returns the size of the event model [em].

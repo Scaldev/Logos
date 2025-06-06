@@ -15,20 +15,14 @@ type event = {
   pre: fmla;
   post: (int * fmla) list;
 }
-  
-(*****************************************************************************)
 
 let post (e: event) (p: int) : fmla =
   match List.find_opt ((=) p << fst) e.post with
   | None -> AP p
   | Some (_, f) -> f
-    
-(*****************************************************************************)
 
 let size_of_event (e: event) : int = 
   size_of_fmla e.pre + List.fold_right ((+) << size_of_fmla << snd) e.post 0
-  
-(*****************************************************************************)
 
 (**
   [aps_of_events e] returns all atomic propositions mentionned in the precondition
@@ -43,8 +37,6 @@ let max_ap_of_event (e: event) : int =
 
 let max_ap_of_events (es: event list): int =
   List.fold_right (max << max_ap_of_event) es 0
-
-(*****************************************************************************)
 
 let pp_of_event (c: context) (e: event) : string =
   
@@ -61,12 +53,6 @@ let pp_of_event (c: context) (e: event) : string =
 (*                                  Event model                              *)
 (*****************************************************************************)
 
-(* 
-   [relations.(a).(i)] gives the list of event ids [i'] such that
-   [events.(i) ->_a events.(i')].
-   Thus, going through all relations of an event model that [O(n)] time,
-   where [n] is the number of [(e, e')] pairs such that [e ->_a e'].
-*)
 type relation = int list array
 
 let size_of_relation (r: relation) : int =
@@ -78,8 +64,6 @@ type event_model = {
   events: event array;
   relations: relations;
 }
-
-(*****************************************************************************)
 
 let size_of_event_model (em: event_model) : int =
   Array.length em.events
@@ -95,8 +79,6 @@ type action = {
   model: event_model;
   aid: int
 }
-
-exception InvalidEventIndex of int
 
 let size_of_action (alpha: action) : int =
   size_of_event_model alpha.model

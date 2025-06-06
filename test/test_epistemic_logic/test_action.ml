@@ -1,6 +1,8 @@
 open Epistemic_logic
 
-(* Add formula equality *)
+(*****************************************************************************)
+(*                                    Set up                                 *)
+(*****************************************************************************)
 
 let pp_fmla fmt f =
   Format.fprintf fmt "%s" (string_of_fmla f)
@@ -107,6 +109,25 @@ let tests_size_of_event = "size_of_event", [
 ]
 
 (*****************************************************************************)
+(*                              max_ap_of_events                             *)
+(*****************************************************************************)
+
+let test_max_ap_of_events_0 () =
+  let obtained = max_ap_of_events [e1] in
+  let expected = 2 in
+  Alcotest.(check int) "" expected obtained
+
+let test_max_ap_of_events_1 () =
+  let obtained = max_ap_of_events [e2] in
+  let expected = 1 in
+  Alcotest.(check int) "" expected obtained
+
+let tests_max_ap_of_events = "max_ap_of_events", [
+  test_max_ap_of_events_0;
+  test_max_ap_of_events_1;
+]
+
+(*****************************************************************************)
 (*                                pp_of_event                                *)
 (*****************************************************************************)
 
@@ -202,6 +223,7 @@ let tests_size_of_action = "size_of_action", [
 let tests = [
   tests_post;
   tests_size_of_event;
+  tests_max_ap_of_events;
   tests_pp_of_event;
   tests_size_of_event_model;
   tests_size_of_action;
